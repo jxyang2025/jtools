@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网站性能测试工具 - 多运营商节点</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>网站性能测试工具 - 状态判断依据</title>
     <style>
         :root {
             --primary: #3498db;
@@ -14,10 +13,6 @@
             --dark: #2c3e50;
             --light: #ecf0f1;
             --gray: #95a5a6;
-            --telecom: #3498db;
-            --unicom: #9b59b6;
-            --mobile: #e74c3c;
-            --oversea: #f39c12;
         }
         
         * {
@@ -36,7 +31,7 @@
         }
         
         .container {
-            max-width: 1600px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -185,52 +180,6 @@
             margin-bottom: 20px;
         }
         
-        .provider-selection {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .provider-btn {
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background: #e9ecef;
-            color: var(--dark);
-        }
-        
-        .provider-btn.active {
-            color: white;
-        }
-        
-        .provider-btn.telecom.active {
-            background: var(--telecom);
-        }
-        
-        .provider-btn.unicom.active {
-            background: var(--unicom);
-        }
-        
-        .provider-btn.mobile.active {
-            background: var(--mobile);
-        }
-        
-        .provider-btn.oversea.active {
-            background: var(--oversea);
-        }
-        
-        .provider-btn i {
-            font-size: 16px;
-        }
-        
         button {
             padding: 14px;
             border: none;
@@ -342,45 +291,11 @@
             border-left-color: var(--danger);
         }
         
-        .test-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
         .test-url {
             font-weight: 600;
+            margin-bottom: 10px;
             color: var(--dark);
             word-break: break-all;
-        }
-        
-        .test-provider {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background: #f8f9fa;
-        }
-        
-        .provider-telecom {
-            color: var(--telecom);
-            border: 1px solid var(--telecom);
-        }
-        
-        .provider-unicom {
-            color: var(--unicom);
-            border: 1px solid var(--unicom);
-        }
-        
-        .provider-mobile {
-            color: var(--mobile);
-            border: 1px solid var(--mobile);
-        }
-        
-        .provider-oversea {
-            color: var(--oversea);
-            border: 1px solid var(--oversea);
         }
         
         .test-metrics {
@@ -507,72 +422,8 @@
             font-size: 18px;
         }
         
-        .comparison-chart {
-            margin-top: 25px;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
-        }
-        
-        .chart-container {
-            height: 200px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-around;
-            padding: 20px 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .chart-bar {
-            width: 60px;
-            background: var(--primary);
-            border-radius: 4px 4px 0 0;
-            position: relative;
-            transition: height 0.5s ease;
-        }
-        
-        .chart-bar.telecom {
-            background: var(--telecom);
-        }
-        
-        .chart-bar.unicom {
-            background: var(--unicom);
-        }
-        
-        .chart-bar.mobile {
-            background: var(--mobile);
-        }
-        
-        .chart-bar.oversea {
-            background: var(--oversea);
-        }
-        
-        .chart-labels {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 15px;
-        }
-        
-        .chart-label {
-            text-align: center;
-            width: 60px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .chart-value {
-            position: absolute;
-            top: -25px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
         /* 响应式设计 */
-        @media (max-width: 1200px) {
+        @media (max-width: 992px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
@@ -581,14 +432,10 @@
                 border-right: none;
                 border-bottom: 1px solid #e9ecef;
             }
-            
-            .test-metrics {
-                grid-template-columns: 1fr 1fr;
-            }
         }
         
-        @media (max-width: 768px) {
-            .button-group, .provider-selection {
+        @media (max-width: 576px) {
+            .button-group {
                 grid-template-columns: 1fr;
             }
             
@@ -609,12 +456,6 @@
             
             .status-bar {
                 flex-direction: column;
-                gap: 10px;
-            }
-            
-            .test-header {
-                flex-direction: column;
-                align-items: flex-start;
                 gap: 10px;
             }
         }
@@ -658,11 +499,12 @@
             display: none;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-tachometer-alt"></i>网站性能测试工具 - 多运营商节点</h1>
+            <h1><i class="fas fa-tachometer-alt"></i>网站性能测试工具 - 状态判断依据</h1>
             <div class="header-controls">
                 <button class="btn-primary" id="clearResults">
                     <i class="fas fa-trash"></i>清除结果
@@ -678,24 +520,6 @@
                 <div class="input-group">
                     <h3><i class="fas fa-list"></i>测试URL列表</h3>
                     <textarea id="urlInput" placeholder="请输入要测试的网站URL，每行一个网址&#10;例如：&#10;https://www.example.com&#10;https://www.google.com&#10;https://www.github.com"></textarea>
-                </div>
-                
-                <div class="input-group">
-                    <h3><i class="fas fa-server"></i>选择运营商节点</h3>
-                    <div class="provider-selection">
-                        <button class="provider-btn telecom active" data-provider="telecom">
-                            <i class="fas fa-network-wired"></i>中国电信
-                        </button>
-                        <button class="provider-btn unicom" data-provider="unicom">
-                            <i class="fas fa-wifi"></i>中国联通
-                        </button>
-                        <button class="provider-btn mobile" data-provider="mobile">
-                            <i class="fas fa-signal"></i>中国移动
-                        </button>
-                        <button class="provider-btn oversea" data-provider="oversea">
-                            <i class="fas fa-globe"></i>海外节点
-                        </button>
-                    </div>
                 </div>
                 
                 <div class="button-group">
@@ -775,10 +599,7 @@
                     </div>
                     
                     <div class="test-item success">
-                        <div class="test-header">
-                            <div class="test-url">https://www.example.com</div>
-                            <div class="test-provider provider-telecom">中国电信</div>
-                        </div>
+                        <div class="test-url">https://www.example.com</div>
                         <div class="test-metrics">
                             <div class="metric">
                                 <div class="metric-value">1.2s</div>
@@ -804,10 +625,7 @@
                     </div>
                     
                     <div class="test-item warning">
-                        <div class="test-header">
-                            <div class="test-url">https://www.sample-site.org</div>
-                            <div class="test-provider provider-unicom">中国联通</div>
-                        </div>
+                        <div class="test-url">https://www.sample-site.org</div>
                         <div class="test-metrics">
                             <div class="metric">
                                 <div class="metric-value">3.4s</div>
@@ -833,10 +651,7 @@
                     </div>
                     
                     <div class="test-item error">
-                        <div class="test-header">
-                            <div class="test-url">https://www.slow-site.com</div>
-                            <div class="test-provider provider-oversea">海外节点</div>
-                        </div>
+                        <div class="test-url">https://www.slow-site.com</div>
                         <div class="test-metrics">
                             <div class="metric">
                                 <div class="metric-value">5.8s</div>
@@ -858,30 +673,6 @@
                             <button class="btn-secondary">
                                 <i class="fas fa-info-circle"></i>详细信息
                             </button>
-                        </div>
-                    </div>
-                    
-                    <div class="comparison-chart">
-                        <h3><i class="fas fa-chart-bar"></i> 不同节点性能对比</h3>
-                        <div class="chart-container" id="chartContainer">
-                            <div class="chart-bar telecom" style="height: 80%;">
-                                <div class="chart-value">1.2s</div>
-                            </div>
-                            <div class="chart-bar unicom" style="height: 65%;">
-                                <div class="chart-value">1.8s</div>
-                            </div>
-                            <div class="chart-bar mobile" style="height: 75%;">
-                                <div class="chart-value">1.5s</div>
-                            </div>
-                            <div class="chart-bar oversea" style="height: 40%;">
-                                <div class="chart-value">3.2s</div>
-                            </div>
-                        </div>
-                        <div class="chart-labels">
-                            <div class="chart-label" style="color: var(--telecom);">中国电信</div>
-                            <div class="chart-label" style="color: var(--unicom);">中国联通</div>
-                            <div class="chart-label" style="color: var(--mobile);">中国移动</div>
-                            <div class="chart-label" style="color: var(--oversea);">海外节点</div>
                         </div>
                     </div>
                 </div>
@@ -906,7 +697,6 @@
             const errorTestsEl = document.getElementById('errorTests');
             const batchTestInfo = document.getElementById('batchTestInfo');
             const batchTestMessage = document.getElementById('batchTestMessage');
-            const providerButtons = document.querySelectorAll('.provider-btn');
             
             let testCount = 0;
             let successCount = 0;
@@ -914,19 +704,9 @@
             let errorCount = 0;
             let isTesting = false;
             let currentBatchId = 0;
-            let selectedProvider = 'telecom'; // 默认选择中国电信
             
             // 初始化示例URL
             urlInput.value = "https://www.example.com\nhttps://www.google.com\nhttps://www.github.com";
-            
-            // 设置运营商节点选择
-            providerButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    providerButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    selectedProvider = this.dataset.provider;
-                });
-            });
             
             // 开始测试按钮点击事件
             runTestBtn.addEventListener('click', function() {
@@ -1080,35 +860,10 @@
                         // 检查是否已停止测试或批次已更改
                         if (!isTesting || batchId !== currentBatchId) return;
                         
-                        // 根据选择的运营商节点调整测试结果
-                        let loadTime, performanceScore, firstRender;
-                        
-                        switch(selectedProvider) {
-                            case 'telecom':
-                                loadTime = (1 + Math.random() * 2).toFixed(1);
-                                performanceScore = Math.floor(80 + Math.random() * 20);
-                                firstRender = (800 + Math.random() * 700).toFixed(0);
-                                break;
-                            case 'unicom':
-                                loadTime = (1.5 + Math.random() * 2.5).toFixed(1);
-                                performanceScore = Math.floor(70 + Math.random() * 25);
-                                firstRender = (1000 + Math.random() * 1000).toFixed(0);
-                                break;
-                            case 'mobile':
-                                loadTime = (1.2 + Math.random() * 2.3).toFixed(1);
-                                performanceScore = Math.floor(75 + Math.random() * 20);
-                                firstRender = (900 + Math.random() * 900).toFixed(0);
-                                break;
-                            case 'oversea':
-                                loadTime = (2.5 + Math.random() * 4).toFixed(1);
-                                performanceScore = Math.floor(40 + Math.random() * 35);
-                                firstRender = (1500 + Math.random() * 2000).toFixed(0);
-                                break;
-                            default:
-                                loadTime = (1 + Math.random() * 2).toFixed(1);
-                                performanceScore = Math.floor(80 + Math.random() * 20);
-                                firstRender = (800 + Math.random() * 700).toFixed(0);
-                        }
+                        // 随机生成测试结果
+                        const loadTime = (1 + Math.random() * 6).toFixed(1);
+                        const performanceScore = Math.floor(30 + Math.random() * 70);
+                        const firstRender = (800 + Math.random() * 3000).toFixed(0);
                         
                         // 确定测试结果状态
                         let status = determineStatus(performanceScore, parseFloat(loadTime), parseFloat(firstRender));
@@ -1125,7 +880,7 @@
                         updateCounters();
                         
                         // 添加测试结果到界面
-                        addTestResult(url, loadTime, performanceScore, firstRender, status, selectedProvider);
+                        addTestResult(url, loadTime, performanceScore, firstRender, status);
                         
                         // 处理下一个URL
                         if (isBatch) {
@@ -1159,35 +914,10 @@
                         // 检查是否已停止测试或批次已更改
                         if (!isTesting || batchId !== currentBatchId) return;
                         
-                        // 根据选择的运营商节点调整测试结果
-                        let loadTime, performanceScore, firstRender;
-                        
-                        switch(selectedProvider) {
-                            case 'telecom':
-                                loadTime = (1 + Math.random() * 2).toFixed(1);
-                                performanceScore = Math.floor(80 + Math.random() * 20);
-                                firstRender = (800 + Math.random() * 700).toFixed(0);
-                                break;
-                            case 'unicom':
-                                loadTime = (1.5 + Math.random() * 2.5).toFixed(1);
-                                performanceScore = Math.floor(70 + Math.random() * 25);
-                                firstRender = (1000 + Math.random() * 1000).toFixed(0);
-                                break;
-                            case 'mobile':
-                                loadTime = (1.2 + Math.random() * 2.3).toFixed(1);
-                                performanceScore = Math.floor(75 + Math.random() * 20);
-                                firstRender = (900 + Math.random() * 900).toFixed(0);
-                                break;
-                            case 'oversea':
-                                loadTime = (2.5 + Math.random() * 4).toFixed(1);
-                                performanceScore = Math.floor(40 + Math.random() * 35);
-                                firstRender = (1500 + Math.random() * 2000).toFixed(0);
-                                break;
-                            default:
-                                loadTime = (1 + Math.random() * 2).toFixed(1);
-                                performanceScore = Math.floor(80 + Math.random() * 20);
-                                firstRender = (800 + Math.random() * 700).toFixed(0);
-                        }
+                        // 随机生成测试结果
+                        const loadTime = (1 + Math.random() * 6).toFixed(1);
+                        const performanceScore = Math.floor(30 + Math.random() * 70);
+                        const firstRender = (800 + Math.random() * 3000).toFixed(0);
                         
                         // 确定测试结果状态
                         let status = determineStatus(performanceScore, parseFloat(loadTime), parseFloat(firstRender));
@@ -1204,7 +934,7 @@
                         updateCounters();
                         
                         // 添加测试结果到界面
-                        addTestResult(url, loadTime, performanceScore, firstRender, status, selectedProvider);
+                        addTestResult(url, loadTime, performanceScore, firstRender, status);
                         
                         isTesting = false;
                         updateButtonStates();
@@ -1229,38 +959,12 @@
             }
             
             // 添加测试结果到界面
-            function addTestResult(url, loadTime, performanceScore, firstRender, status, provider) {
+            function addTestResult(url, loadTime, performanceScore, firstRender, status) {
                 const testItem = document.createElement('div');
                 testItem.className = `test-item ${status}`;
                 
-                let providerName, providerClass;
-                switch(provider) {
-                    case 'telecom':
-                        providerName = '中国电信';
-                        providerClass = 'provider-telecom';
-                        break;
-                    case 'unicom':
-                        providerName = '中国联通';
-                        providerClass = 'provider-unicom';
-                        break;
-                    case 'mobile':
-                        providerName = '中国移动';
-                        providerClass = 'provider-mobile';
-                        break;
-                    case 'oversea':
-                        providerName = '海外节点';
-                        providerClass = 'provider-oversea';
-                        break;
-                    default:
-                        providerName = '中国电信';
-                        providerClass = 'provider-telecom';
-                }
-                
                 testItem.innerHTML = `
-                    <div class="test-header">
-                        <div class="test-url">${url}</div>
-                        <div class="test-provider ${providerClass}">${providerName}</div>
-                    </div>
+                    <div class="test-url">${url}</div>
                     <div class="test-metrics">
                         <div class="metric">
                             <div class="metric-value">${loadTime}s</div>
@@ -1297,7 +1001,7 @@
                 // 添加详细信息按钮事件
                 const detailsBtn = testItem.querySelector('.btn-secondary');
                 detailsBtn.addEventListener('click', function() {
-                    alert(`详细信息: ${url}\n运营商节点: ${providerName}\n加载时间: ${loadTime}s\n性能得分: ${performanceScore}\n首次渲染: ${firstRender}ms\n状态: ${status}`);
+                    alert(`详细信息: ${url}\n加载时间: ${loadTime}s\n性能得分: ${performanceScore}\n首次渲染: ${firstRender}ms\n状态: ${status}`);
                 });
                 
                 resultsContainer.appendChild(testItem);
@@ -1337,30 +1041,30 @@
             // 显示批量测试信息
             function showBatchTestInfo(message) {
                 batchTestMessage.textContent = message;
-                batchTestInfo.style.display = 'flex';
+                batchTestInfo.style。display = 'flex';
             }
             
             // 隐藏批量测试信息
             function hideBatchTestInfo() {
-                batchTestInfo.style.display = 'none';
+                batchTestInfo。style。display = 'none';
             }
             
             // 更新按钮状态
             function updateButtonStates() {
-                runTestBtn.disabled = isTesting;
-                batchTestBtn.disabled = isTesting;
-                stopTestBtn.disabled = !isTesting;
-                resetTestBtn.disabled = isTesting;
+                runTestBtn。disabled = isTesting;
+                batchTestBtn。disabled = isTesting;
+                stopTestBtn。disabled = !isTesting;
+                resetTestBtn。disabled = isTesting;
                 clearResultsBtn.disabled = isTesting;
                 exportResultsBtn.disabled = isTesting;
             }
             
             // 更新计数器
             function updateCounters() {
-                totalTestsEl.textContent = testCount;
+                totalTestsEl。textContent = testCount;
                 successTestsEl.textContent = successCount;
                 warningTestsEl.textContent = warningCount;
-                errorTestsEl.textContent = errorCount;
+                errorTestsEl。textContent = errorCount;
             }
             
             // 重置计数器
