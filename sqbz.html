@@ -318,6 +318,19 @@
             opacity: 0.9;
         }
         
+        .debug-console {
+            background: #2c3e50;
+            color: #27ae60;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
         @media (max-width: 768px) {
             .content {
                 grid-template-columns: 1fr;
@@ -348,7 +361,7 @@
                 <div class="form-group">
                     <label>🏢 社区列表:</label>
                     <div class="community-list" id="communityList">
-                        <div class="community-item" onclick="selectCommunity(this, '金泰路社区')">金泰路社区</div>
+                        <div class="community-item selected" onclick="selectCommunity(this, '金泰路社区')">金泰路社区</div>
                         <div class="community-item" onclick="selectCommunity(this, '江湾社区')">江湾社区</div>
                         <div class="community-item" onclick="selectCommunity(this, '盛世路社区')">盛世路社区</div>
                         <div class="community-item" onclick="selectCommunity(this, '福城社区')">福城社区</div>
@@ -431,6 +444,14 @@
                 <p style="text-align: center; padding: 20px; color: #666;">请选择Excel文件后显示预览...</p>
             </div>
         </div>
+        
+        <!-- 调试控制台 -->
+        <div class="section">
+            <h2 class="section-title">🐛 调试控制台</h2>
+            <div class="debug-console" id="debugConsole">
+                > 系统已就绪，等待文件加载...
+            </div>
+        </div>
     </div>
 
     <script>
@@ -494,7 +515,15 @@
                     keywordToCommunity[keyword] = community;
                 });
             }
-            console.log("关键字映射已更新:", keywordToCommunity);
+            debugLog("关键字映射已更新，共 " + Object.keys(keywordToCommunity).length + " 个关键词");
+        }
+
+        // 调试日志
+        function debugLog(message) {
+            const consoleElement = document.getElementById('debugConsole');
+            consoleElement.innerHTML += `\n> ${message}`;
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+            console.log(message);
         }
 
         // 选择社区
@@ -510,6 +539,7 @@
             
             // 加载该社区的关键词
             loadKeywordsForSelectedCommunity();
+            debugLog("已选择社区: " + community);
         }
 
         // 加载选中社区的关键词
@@ -533,16 +563,16 @@
                 communityList.appendChild(newItem);
                 
                 updateKeywordMapping();
-                alert(`✅ 社区 "${name}" 已添加`);
+                debugLog(`✅ 社区 "${name}" 已添加`);
             } else if (name) {
-                alert(`❌ 社区 "${name}" 已存在`);
+                debugLog(`❌ 社区 "${name}" 已存在`);
             }
         }
 
         // 删除社区
         function deleteCommunity() {
             if (!selectedCommunity) {
-                alert('❌ 请先选择一个社区');
+                debugLog('❌ 请先选择一个社区');
                 return;
             }
             
@@ -559,21 +589,21 @@
                 });
                 
                 // 选择第一个社区
-                if (items.length > 1) {
+                if (items.length > 0) {
                     items[0].click();
                 } else {
                     selectedCommunity = "";
                     document.getElementById('keywordsText').value = '';
                 }
                 
-                alert(`✅ 社区 "${selectedCommunity}" 已删除`);
+                debugLog(`✅ 社区 "${selectedCommunity}" 已删除`);
             }
         }
 
         // 保存关键词
         function saveKeywords() {
             if (!selectedCommunity) {
-                alert('❌ 请先选择一个社区');
+                debugLog('❌ 请先选择一个社区');
                 return;
             }
             
@@ -584,7 +614,7 @@
             
             communityMapping[selectedCommunity] = keywords;
             updateKeywordMapping();
-            alert('✅ 关键词已保存');
+            debugLog('✅ 关键词已保存');
         }
 
         // 重置规则
@@ -610,7 +640,7 @@
                     communityList.firstChild.click();
                 }
                 
-                alert('✅ 已重置为默认规则');
+                debugLog('✅ 已重置为默认规则');
             }
         }
 
@@ -619,26 +649,28 @@
             if (!file) return;
             
             if (!file.name.match(/\.(xlsx|xls)$/i)) {
-                alert('❌ 请选择Excel文件 (.xlsx 或 .xls)');
+                debugLog('❌ 请选择Excel文件 (.xlsx 或 .xls)');
                 return;
             }
             
             currentFileName = file.name;
             updateStatus(`✅ 已选择文件: ${file.name}`);
+            debugLog(`📁 已选择文件: ${file.name}`);
             
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    processedWorkbook = XLSX.read(data, { type: 'array' });
+                    processedWorkbook = XLSX.read(data, { type: 'array', cellText: false, cellDates: true });
                     
                     // 显示预览
                     showPreview(processedWorkbook);
                     
                     document.getElementById('processBtn').disabled = false;
                     updateStatus(`✅ 文件加载成功，共 ${totalRows} 行数据`);
+                    debugLog(`✅ 文件加载成功，共 ${totalRows} 行数据`);
                 } catch (error) {
-                    alert('❌ 文件读取失败: ' + error.message);
+                    debugLog('❌ 文件读取失败: ' + error.message);
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -679,55 +711,75 @@
             }
         }
 
-        // 处理文件
+        // 处理文件 - 修复单元格写入问题
         function processFile() {
             if (!processedWorkbook) {
-                alert('❌ 请先选择Excel文件');
+                debugLog('❌ 请先选择Excel文件');
                 return;
             }
             
-            const keyCol = document.getElementById('keyColumn').value.toUpperCase();
-            const resultCol = document.getElementById('resultColumn').value.toUpperCase();
+            const keyColLetter = document.getElementById('keyColumn').value.toUpperCase();
+            const resultColLetter = document.getElementById('resultColumn').value.toUpperCase();
             const startRow = parseInt(document.getElementById('startRow').value) || 2;
             
             const worksheet = processedWorkbook.Sheets[processedWorkbook.SheetNames[0]];
-            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            
+            // 获取实际数据范围（更准确的方法）
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            const totalDataRows = jsonData.length;
             
             matchedRows = 0;
             let processed = 0;
             
-            // 处理每一行
-            for (let row = startRow; row <= range.e.r; row++) {
-                const keyCellAddr = XLSX.utils.encode_cell({c: XLSX.utils.decode_col(keyCol), r: row});
-                const resultCellAddr = XLSX.utils.encode_cell({c: XLSX.utils.decode_col(resultCol), r: row});
+            debugLog(`开始处理: 关键词列=${keyColLetter}, 结果列=${resultColLetter}, 起始行=${startRow}`);
+            
+            // 将列字母转换为列索引（A=0, B=1, ...）
+            const keyColIndex = XLSX.utils.decode_col(keyColLetter);
+            const resultColIndex = XLSX.utils.decode_col(resultColLetter);
+            
+            // 处理每一行（从起始行开始）
+            for (let row = startRow - 1; row < totalDataRows; row++) { // -1 因为数组从0开始
+                if (!jsonData[row] || !jsonData[row][keyColIndex]) continue;
                 
-                if (!worksheet[keyCellAddr]) continue;
-                
-                const cellValue = String(worksheet[keyCellAddr].v || '');
+                const cellValue = String(jsonData[row][keyColIndex] || '');
                 if (!cellValue || cellValue === 'None') continue;
                 
                 // 查找匹配的社区
                 const community = findMatchingCommunity(cellValue);
                 
-                // 写入结果
                 if (community) {
-                    if (!worksheet[resultCellAddr]) {
-                        worksheet[resultCellAddr] = { t: 's', v: '' };
-                    }
-                    worksheet[resultCellAddr].v = community;
-                    worksheet[resultCellAddr].t = 's';
+                    // 创建单元格地址
+                    const cellAddress = XLSX.utils.encode_cell({c: resultColIndex, r: row});
+                    
+                    // 创建或更新单元格
+                    worksheet[cellAddress] = {
+                        t: 's', // 字符串类型
+                        v: community
+                    };
+                    
                     matchedRows++;
+                    debugLog(`✅ 行 ${row + 1}: "${cellValue}" -> "${community}"`);
+                } else {
+                    debugLog(`❌ 行 ${row + 1}: "${cellValue}" -> 未匹配`);
                 }
                 
                 // 更新进度
                 processed++;
-                const progress = Math.round((processed / totalRows) * 100);
-                updateProgress(progress, `处理中: ${processed}/${totalRows} 行，已匹配: ${matchedRows}`);
+                const progress = Math.round((processed / (totalDataRows - startRow + 1)) * 100);
+                updateProgress(progress, `处理中: ${processed}/${totalDataRows - startRow + 1} 行，已匹配: ${matchedRows}`);
             }
+            
+            // 更新工作表的范围引用
+            const newRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+            // 确保范围包含所有处理过的行
+            newRange.e.r = Math.max(newRange.e.r, totalDataRows - 1);
+            worksheet['!ref'] = XLSX.utils.encode_range(newRange);
             
             updateProgress(100, `✅ 处理完成! 共处理 ${processed} 行，匹配 ${matchedRows} 条记录`);
             document.getElementById('downloadBtn').disabled = false;
             document.getElementById('matchedRows').textContent = matchedRows;
+            
+            debugLog(`✅ 处理完成! 共处理 ${processed} 行，匹配 ${matchedRows} 条记录`);
             
             // 更新预览
             showPreview(processedWorkbook);
@@ -740,18 +792,16 @@
             
             for (const keyword in keywordToCommunity) {
                 if (text.includes(keyword)) {
-                    console.log(`匹配成功: "${text}" -> "${keyword}" -> "${keywordToCommunity[keyword]}"`);
                     return keywordToCommunity[keyword];
                 }
             }
-            console.log(`未匹配: "${text}"`);
             return null;
         }
 
         // 下载结果
         function downloadResult() {
             if (!processedWorkbook) {
-                alert('❌ 没有处理后的文件可供下载');
+                debugLog('❌ 没有处理后的文件可供下载');
                 return;
             }
             
@@ -773,8 +823,9 @@
                 URL.revokeObjectURL(url);
                 
                 updateStatus(`✅ 文件已下载: ${saveName}`);
+                debugLog(`✅ 文件已下载: ${saveName}`);
             } catch (error) {
-                alert('❌ 文件保存失败: ' + error.message);
+                debugLog('❌ 文件保存失败: ' + error.message);
             }
         }
 
