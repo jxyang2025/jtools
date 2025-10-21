@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社区自动标注工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        .card-header {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+        }
+        .progress {
+            height: 25px;
+            margin: 15px 0;
+        }
+        .keyword-list {
+            height: 300px;
+            resize: vertical;
+        }
+        .community-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #dropArea {
+            border: 2px dashed #0d6efd;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            background-color: #f1f8ff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #dropArea:hover {
+            background-color: #e3f2fd;
+        }
+        .btn-toolbar {
+            margin: 10px 0;
+        }
+        .status-bar {
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center my-4">社区自动标注工具</h1>
+        <p class="text-center text-muted">基于关键词自动标注Excel数据中的社区信息</p>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">规则管理</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>社区列表</h5>
+                                <div class="community-list card">
+                                    <div class="card-body">
+                                        <select id="communitySelect" class="form-select" size="8"></select>
+                                    </div>
+                                </div>
+                                <div class="btn-toolbar">
+                                    <button id="addCommunityBtn" class="btn btn-success me-2">添加社区</button>
+                                    <button id="deleteCommunityBtn" class="btn btn-danger">删除社区</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>关键词管理</h5>
+                                <p class="text-muted">每个关键词占一行</p>
+                                <textarea id="keywordsText" class="form-control keyword-list"></textarea>
+                                <button id="saveKeywordsBtn" class="btn btn-primary mt-2">保存关键词</button>
+                            </div>
+                        </div>
+                        <div class="btn-toolbar mt-3">
+                            <button id="resetRulesBtn" class="btn btn-warning me-2">重置为默认规则</button>
+                            <button id="exportRulesBtn" class="btn btn-info me-2">导出规则</button>
+                            <input type="file" id="importRulesInput" accept=".json" style="display: none;">
+                            <button id="importRulesBtn" class="btn btn-info">导入规则</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">文件处理</div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="keyColumn" class="form-label">关键词列(字母):</label>
+                                <input type="text" id="keyColumn" class="form-control" value="A">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="resultColumn" class="form-label">结果列(字母):</label>
+                                <input type="text" id="resultColumn" class="form-control" value="B">
+                            </div>
+                        </div>
+                        
+                        <div id="dropArea">
+                            <h5>拖放Excel文件到此处</h5>
+                            <p class="text-muted">或点击选择文件</p>
+                            <input type="file" id="fileInput" accept=".xlsx, .xls" style="display: none;">
+                            <button id="browseBtn" class="btn btn-primary">浏览文件</button>
+                        </div>
+                        
+                        <div class="progress-wrapper mt-3">
+                            <div class="progress">
+                                <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="status-bar">
+                            <span id="statusText">准备就绪</span>
+                        </div>
+                        
+                        <div class="btn-toolbar justify-content-center mt-3">
+                            <button id="processBtn" class="btn btn-success me-3" disabled>开始处理</button>
+                            <button id="downloadBtn" class="btn btn-primary" disabled>下载结果</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 默认的社区关键字映射规则
+        const DEFAULT_COMMUNITY_MAPPING = {
+            "金泰路社区": ["聚江苑", "鸿江苑", "达江苑", "望江苑", "星江苑", "赏江苑", "揽江苑", "咏江苑", "金泰路社区"],
+            "江湾社区": ["融江苑", "映江苑", "瑞江苑", "临江苑", "贯江苑", "豪江苑", "江湾社区"],
+            "盛世路社区": ["盛世路社区", "悦江苑", "湘江豪庭", "富湾国际"],
+            "福城社区": ["新领地公寓", "北国风光", "水韵花都", "水岸兰庭", "恒大御景半岛一期", "湘江苑",
+                         "福天兴业", "检察院宿舍", "公安局小区", "金霞小区", "二十二片地", "二十三片地",
+                         "纸业市场", "23号地", "22号地", "福城社区"],
+            "欣城社区": ["黄金海岸", "景香苑", "法苑", "恒鑫澜北湾", "澜北湾", "滨江美寓", "广福园", "欣城社区"],
+            "凤亭社区": ["金霞苑", "江临天下", "清澜苑", "长泰豪园", "世纪春天", "世纪云中心", "和平花园", "网船班",
+                         "凤亭社区"],
+            "江滨社区": ["锦绣苑", "江滨玫瑰园", "十号重建地", "7号重建地", "7号地", "10号地"]
+        };
+
+        // 全局变量
+        let communityMapping = {};
+        let keywordToCommunity = {};
+        let processedWorkbook = null;
+        let currentFileName = "";
+
+        // DOM元素
+        const communitySelect = document.getElementById('communitySelect');
+        const keywordsText = document.getElementById('keywordsText');
+        const progressBar = document.getElementById('progressBar');
+        const statusText = document.getElementById('statusText');
+        const processBtn = document.getElementById('processBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const dropArea = document.getElementById('dropArea');
+        const browseBtn = document.getElementById('browseBtn');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRules();
+            updateCommunitySelect();
+            setupEventListeners();
+        });
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 社区选择变化
+            communitySelect.addEventListener('change', updateKeywordsText);
+            
+            // 按钮事件
+            document.getElementById('addCommunityBtn').addEventListener('click', addCommunity);
+            document.getElementById('deleteCommunityBtn').addEventListener('click', deleteCommunity);
+            document.getElementById('saveKeywordsBtn').addEventListener('click', saveKeywords);
+            document.getElementById('resetRulesBtn').addEventListener('click', resetDefaultRules);
+            document.getElementById('exportRulesBtn').addEventListener('click', exportRules);
+            document.getElementById('importRulesBtn').addEventListener('click', () => document.getElementById('importRulesInput').click());
+            document.getElementById('importRulesInput').addEventListener('change', importRules);
+            
+            // 文件处理事件
+            browseBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+            processBtn.addEventListener('click', processFile);
+            downloadBtn.addEventListener('click', downloadResult);
+            
+            // 拖放事件
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.style.backgroundColor = '#e3f2fd';
+            });
+            
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.style.backgroundColor = '#f1f8ff';
+            });
+            
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.style.backgroundColor = '#f1f8ff';
+                
+                if (e.dataTransfer.files.length) {
+                    handleDroppedFile(e.dataTransfer.files[0]);
+                }
+            });
+            
+            dropArea.addEventListener('click', () => fileInput.click());
+        }
+
+        // 加载规则
+        function loadRules() {
+            const savedRules = localStorage.getItem('community_rules');
+            if (savedRules) {
+                communityMapping = JSON.parse(savedRules);
+            } else {
+                communityMapping = {...DEFAULT_COMMUNITY_MAPPING};
+                saveRulesToLocalStorage();
+            }
+            updateKeywordMapping();
+        }
+
+        // 保存规则到本地存储
+        function saveRulesToLocalStorage() {
+            localStorage.setItem('community_rules', JSON.stringify(communityMapping));
+        }
+
+        // 更新关键字到社区的映射
+        function updateKeywordMapping() {
+            keywordToCommunity = {};
+            for (const community in communityMapping) {
+                communityMapping[community].forEach(keyword => {
+                    keywordToCommunity[keyword] = community;
+                });
+            }
+        }
+
+        // 更新社区选择下拉框
+        function updateCommunitySelect() {
+            communitySelect.innerHTML = '';
+            const communities = Object.keys(communityMapping).sort();
+            
+            communities.forEach(community => {
+                const option = document.createElement('option');
+                option.value = community;
+                option.textContent = community;
+                communitySelect.appendChild(option);
+            });
+            
+            if (communities.length > 0) {
+                communitySelect.selectedIndex = 0;
+                updateKeywordsText();
+            }
+        }
+
+        // 更新关键字文本框
+        function updateKeywordsText() {
+            const selectedCommunity = communitySelect.value;
+            if (selectedCommunity && communityMapping[selectedCommunity]) {
+                keywordsText.value = communityMapping[selectedCommunity].join('\n');
+            } else {
+                keywordsText.value = '';
+            }
+        }
+
+        // 添加社区
+        function addCommunity() {
+            const communityName = prompt('请输入社区名称:');
+            if (communityName && !communityMapping[communityName]) {
+                communityMapping[communityName] = [];
+                updateKeywordMapping();
+                saveRulesToLocalStorage();
+                updateCommunitySelect();
+                
+                // 选择新添加的社区
+                for (let i = 0; i < communitySelect.options.length; i++) {
+                    if (communitySelect.options[i].value === communityName) {
+                        communitySelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                updateKeywordsText();
+            } else if (communityName) {
+                alert(`社区 '${communityName}' 已存在!`);
+            }
+        }
+
+        // 删除社区
+        function deleteCommunity() {
+            const selectedCommunity = communitySelect.value;
+            if (selectedCommunity && confirm(`确定要删除社区 '${selectedCommunity}' 及其所有关键字吗?`)) {
+                delete communityMapping[selectedCommunity];
+                updateKeywordMapping();
+                saveRulesToLocalStorage();
+                updateCommunitySelect();
+                updateKeywordsText();
+            }
+        }
+
+        // 保存关键字
+        function saveKeywords() {
+            const selectedCommunity = communitySelect.value;
+            if (selectedCommunity) {
+                const keywords = keywordsText.value.split('\n')
+                    .map(kw => kw.trim())
+                    .filter(kw => kw.length > 0);
+                
+                communityMapping[selectedCommunity] = keywords;
+                updateKeywordMapping();
+                saveRulesToLocalStorage();
+                alert(`社区 '${selectedCommunity}' 的关键字已更新!`);
+            }
+        }
+
+        // 重置为默认规则
+        function resetDefaultRules() {
+            if (confirm('确定要重置为默认规则吗？')) {
+                communityMapping = {...DEFAULT_COMMUNITY_MAPPING};
+                updateKeywordMapping();
+                saveRulesToLocalStorage();
+                updateCommunitySelect();
+                updateKeywordsText();
+                statusText.textContent = '已重置为默认规则';
+            }
+        }
+
+        // 导出规则
+        function exportRules() {
+            const dataStr = JSON.stringify(communityMapping, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            saveAs(blob, 'community_rules.json');
+        }
+
+        // 导入规则
+        function importRules(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const rules = JSON.parse(e.target.result);
+                    communityMapping = rules;
+                    updateKeywordMapping();
+                    saveRulesToLocalStorage();
+                    updateCommunitySelect();
+                    updateKeywordsText();
+                    alert('规则导入成功!');
+                } catch (error) {
+                    alert('导入失败: 文件格式不正确');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // 重置input
+        }
+
+        // 处理文件选择
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleDroppedFile(file);
+            }
+        }
+
+        // 处理拖放的文件
+        function handleDroppedFile(file) {
+            if (file.name.match(/\.(xlsx|xls)$/i)) {
+                currentFileName = file.name;
+                statusText.textContent = `已选择文件: ${file.name}`;
+                processBtn.disabled = false;
+                
+                // 读取文件
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    processedWorkbook = XLSX.read(data, { type: 'array' });
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert('请选择Excel文件 (.xlsx 或 .xls)');
+            }
+        }
+
+        // 处理文件
+        function processFile() {
+            if (!processedWorkbook) {
+                alert('请先选择Excel文件');
+                return;
+            }
+            
+            const keyCol = document.getElementById('keyColumn').value.toUpperCase();
+            const resultCol = document.getElementById('resultColumn').value.toUpperCase();
+            
+            const worksheet = processedWorkbook.Sheets[processedWorkbook.SheetNames[0]];
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            
+            // 计算总行数
+            const totalRows = range.e.r - range.s.r;
+            let processed = 0;
+            
+            // 处理每一行
+            for (let row = range.s.r + 1; row <= range.e.r; row++) {
+                const keyCell = worksheet[XLSX.utils.encode_cell({c: XLSX.utils.decode_col(keyCol), r: row})];
+                if (!keyCell || !keyCell.v) continue;
+                
+                const cellValue = String(keyCell.v);
+                const community = findMatchingCommunity(cellValue);
+                
+                if (community) {
+                    const resultAddr = XLSX.utils.encode_cell({c: XLSX.utils.decode_col(resultCol), r: row});
+                    worksheet[resultAddr] = {t: 's', v: community};
+                }
+                
+                // 更新进度
+                processed++;
+                const progress = (processed / totalRows) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressBar.textContent = `${Math.round(progress)}%`;
+                statusText.textContent = `处理中: ${processed}/${totalRows} 行`;
+                
+                // 为了界面流畅，每处理100行更新一次界面
+                if (processed % 100 === 0) {
+                    setTimeout(() => {}, 0);
+                }
+            }
+            
+            progressBar.style.width = '100%';
+            progressBar.textContent = '100%';
+            statusText.textContent = '处理完成!';
+            downloadBtn.disabled = false;
+        }
+
+        // 查找匹配的社区
+        function findMatchingCommunity(text) {
+            for (const keyword in keywordToCommunity) {
+                if (text.includes(keyword)) {
+                    return keywordToCommunity[keyword];
+                }
+            }
+            return null;
+        }
+
+        // 下载结果
+        function downloadResult() {
+            if (!processedWorkbook) {
+                alert('没有处理后的文件可供下载');
+                return;
+            }
+            
+            const baseName = currentFileName.replace(/\.(xlsx|xls)$/i, '');
+            const saveName = `${baseName}_社区标注.xlsx`;
+            
+            // 转换工作簿为二进制数据
+            const wbout = XLSX.write(processedWorkbook, { bookType: 'xlsx', type: 'array' });
+            
+            // 创建Blob并下载
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            saveAs(blob, saveName);
+        }
+    </script>
+</body>
+</html>
