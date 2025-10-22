@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>社区自动标注工具 - 网页版</title>
+    <title>社区自动标注工具 - 增强版</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -153,6 +153,16 @@
             box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
         }
         
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.4);
+        }
+        
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -272,8 +282,14 @@
             color: #ffc107;
         }
         
-        .debug-info {
+        .debug-info-text {
             color: #17a2b8;
+        }
+        
+        .tooltip-icon {
+            color: #6c757d;
+            margin-left: 5px;
+            cursor: help;
         }
     </style>
 </head>
@@ -301,8 +317,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>关键词管理</label>
-                    <p class="text-muted">每个关键词占一行</p>
+                    <label>关键词管理 <i class="bi bi-info-circle tooltip-icon" title="每个关键词占一行，将用于匹配Excel中的内容"></i></label>
                     <textarea id="keywordsText" class="form-control keyword-list"></textarea>
                     <button id="saveKeywordsBtn" class="btn btn-primary mt-2"><i class="bi bi-save"></i> 保存关键词</button>
                 </div>
@@ -360,7 +375,7 @@
             <div id="debugInfo" class="debug-info">
                 <div class="debug-entry">
                     <span class="debug-time">[系统]</span>
-                    <span class="debug-message debug-info">应用程序已初始化</span>
+                    <span class="debug-message debug-info-text">应用程序已初始化</span>
                 </div>
             </div>
         </div>
@@ -368,8 +383,8 @@
 
     <script>
         // 默认的社区关键字映射规则
-        let communityMapping = {
-           "金泰路社区": ["聚江苑", "鸿江苑", "达江苑", "望江苑", "星江苑", "赏江苑", "揽江苑", "咏江苑", "金泰路社区"],
+        const DEFAULT_COMMUNITY_MAPPING = {
+              "金泰路社区": ["聚江苑", "鸿江苑", "达江苑", "望江苑", "星江苑", "赏江苑", "揽江苑", "咏江苑", "金泰路社区"],
             "江湾社区": ["融江苑", "映江苑", "瑞江苑", "临江苑", "贯江苑", "豪江苑", "江湾社区"],
             "盛世路社区": ["盛世路社区", "悦江苑", "湘江豪庭", "富湾国际"],
             "福城社区": ["新领地公寓", "北国风光", "水韵花都", "水岸兰庭", "恒大御景半岛一期", "湘江苑",
@@ -379,9 +394,9 @@
             "凤亭社区": ["金霞苑", "江临天下", "清澜苑", "长泰豪园", "世纪春天", "世纪云中心", "和平花园", "网船班",
                          "凤亭社区"],
             "江滨社区": ["锦绣苑", "江滨玫瑰园", "十号重建地", "7号重建地", "7号地", "10号地"]
-
         };
         
+        let communityMapping = {};
         let processedData = null;
         let currentFileName = "";
         let debugEntries = [];
@@ -420,6 +435,31 @@
             
             // 滚动到底部
             debugContainer.scrollTop = debugContainer.scrollHeight;
+        }
+
+        // 保存规则到localStorage
+        function saveRulesToStorage() {
+            try {
+                localStorage.setItem('communityMapping', JSON.stringify(communityMapping));
+                addDebugMessage('规则已保存到本地存储', 'success');
+            } catch (error) {
+                addDebugMessage('保存规则到本地存储失败: ' + error.message, 'error');
+            }
+        }
+
+        // 从localStorage加载规则
+        function loadRulesFromStorage() {
+            try {
+                const savedRules = localStorage.getItem('communityMapping');
+                if (savedRules) {
+                    communityMapping = JSON.parse(savedRules);
+                    addDebugMessage('已从本地存储加载规则', 'success');
+                    return true;
+                }
+            } catch (error) {
+                addDebugMessage('从本地存储加载规则失败: ' + error.message, 'error');
+            }
+            return false;
         }
 
         // 初始化社区选择列表
@@ -472,6 +512,9 @@
                 }
                 updateKeywordTextarea();
                 
+                // 保存到localStorage
+                saveRulesToStorage();
+                
                 addDebugMessage(`已添加社区: ${newCommunity}`, "success");
                 document.getElementById('statusText').textContent = `已添加社区: ${newCommunity}`;
             } else if (communityMapping[newCommunity]) {
@@ -490,6 +533,9 @@
                 initCommunitySelect();
                 updateKeywordTextarea();
                 
+                // 保存到localStorage
+                saveRulesToStorage();
+                
                 addDebugMessage(`已删除社区: ${community}`, "warning");
                 document.getElementById('statusText').textContent = `已删除社区: ${community}`;
             }
@@ -505,6 +551,10 @@
             
             if (community && keywords.length > 0) {
                 communityMapping[community] = keywords;
+                
+                // 保存到localStorage
+                saveRulesToStorage();
+                
                 addDebugMessage(`已保存 ${keywords.length} 个关键词到社区 "${community}"`, "success");
                 document.getElementById('statusText').textContent = `已保存 ${keywords.length} 个关键词到 ${community}`;
             } else {
@@ -516,16 +566,12 @@
         // 重置为默认规则
         document.getElementById('resetRulesBtn').addEventListener('click', function() {
             if (confirm('确定要重置为默认规则吗？当前规则将会丢失。')) {
-                communityMapping = {
-                    "金泰路社区": ["聚江苑", "鸿江苑", "金泰"],
-                    "江湾社区": ["江湾", "江湾路"],
-                    "盛世路社区": ["盛世", "盛世路"],
-                    "福城社区": ["福城", "福城路"],
-                    "欣城社区": ["欣城", "欣城路"],
-                    "凤亭社区": ["凤亭", "凤亭路"],
-                    "江滨社区": ["江滨", "江滨路"]
-                };
+                communityMapping = JSON.parse(JSON.stringify(DEFAULT_COMMUNITY_MAPPING));
                 initCommunitySelect();
+                
+                // 保存到localStorage
+                saveRulesToStorage();
+                
                 addDebugMessage('已重置为默认规则', "success");
                 document.getElementById('statusText').textContent = '已重置为默认规则';
             }
@@ -555,6 +601,10 @@
                     const importedRules = JSON.parse(e.target.result);
                     communityMapping = importedRules;
                     initCommunitySelect();
+                    
+                    // 保存到localStorage
+                    saveRulesToStorage();
+                    
                     addDebugMessage('规则已成功导入', "success");
                     document.getElementById('statusText').textContent = '规则已导入';
                 } catch (error) {
@@ -745,9 +795,20 @@
         document.getElementById('communitySelect').addEventListener('change', updateKeywordTextarea);
 
         // 初始化页面
-        initCommunitySelect();
-        addDebugMessage('社区自动标注工具已准备就绪', "info");
+        function initApp() {
+            // 尝试从localStorage加载规则
+            if (!loadRulesFromStorage()) {
+                // 如果没有保存的规则，使用默认规则
+                communityMapping = JSON.parse(JSON.stringify(DEFAULT_COMMUNITY_MAPPING));
+                addDebugMessage('使用默认规则', "info");
+            }
+            
+            initCommunitySelect();
+            addDebugMessage('社区自动标注工具已准备就绪', "info");
+        }
+
+        // 启动应用
+        initApp();
     </script>
 </body>
 </html>
-
