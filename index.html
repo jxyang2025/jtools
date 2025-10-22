@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自用工具集合</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .search-box {
+            background: white;
+            border-radius: 50px;
+            padding: 15px 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            padding: 10px;
+        }
+        
+        .search-box i {
+            color: #7f8c8d;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        
+        .category-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        
+        .category-btn {
+            background: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-btn:hover, .category-btn.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+        
+        .tool-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .tool-card-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .tool-card-header h3 {
+            margin: 0;
+            font-size: 1.4em;
+        }
+        
+        .tool-card-body {
+            padding: 20px;
+        }
+        
+        .tool-card-body p {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .tool-card-footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .tool-link {
+            background: #3498db;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: background 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .tool-link:hover {
+            background: #2980b9;
+            color: white;
+        }
+        
+        .tool-link i {
+            margin-right: 5px;
+        }
+        
+        .tool-tag {
+            background: #e74c3c;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            grid-column: 1 / -1;
+        }
+        
+        .no-results i {
+            font-size: 50px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header p {
+                font-size: 1em;
+                padding: 0 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1><i class="bi bi-tools"></i> 自用工具集合</h1>
+            <p>集成各种实用工具，提高工作效率，持续更新中...</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="搜索工具...">
+        </div>
+        
+        <div class="category-filter">
+            <button class="category-btn active" data-category="all">全部工具</button>
+            <button class="category-btn" data-category="编码解码">编码解码</button>
+            <button class="category-btn" data-category="测试工具">测试工具</button>
+            <button class="category-btn" data-category="数据处理">数据处理</button>
+            <button class="category-btn" data-category="其他工具">其他工具</button>
+        </div>
+        
+        <div class="tools-grid" id="toolsGrid">
+            <!-- Base58编码解码工具 -->
+            <div class="tool-card" data-category="编码解码" data-name="Base58编码解码工具">
+                <div class="tool-card-header">
+                    <h3>Base58编码解码</h3>
+                </div>
+                <div class="tool-card-body">
+                    <p>提供Base58编码和解码功能，支持字符串和文件的转换操作。</p>
+                </div>
+                <div class="tool-card-footer">
+                    <a href="base58.html" class="tool-link"><i class="bi bi-box-arrow-up-right"></i> 打开工具</a>
+                    <span class="tool-tag">编码</span>
+                </div>
+            </div>
+            
+            <!-- 网站测试工具 -->
+            <div class="tool-card" data-category="测试工具" data-name="网站测试工具">
+                <div class="tool-card-header">
+                    <h3>网站测试工具</h3>
+                </div>
+                <div class="tool-card-body">
+                    <p>提供网站性能测试、响应时间检测和基础功能验证等多种测试功能。</p>
+                </div>
+                <div class="tool-card-footer">
+                    <a href="test.html" class="tool-link"><i class="bi bi-box-arrow-up-right"></i> 打开工具</a>
+                    <span class="tool-tag">测试</span>
+                </div>
+            </div>
+            
+            <!-- 社区自动标注工具 -->
+            <div class="tool-card" data-category="数据处理" data-name="社区自动标注工具">
+                <div class="tool-card-header">
+                    <h3>社区自动标注工具</h3>
+                </div>
+                <div class="tool-card-body">
+                    <p>基于关键词自动标注Excel数据中的社区信息，支持规则管理和批量处理。</p>
+                </div>
+                <div class="tool-card-footer">
+                    <a href="sqbz.html" class="tool-link"><i class="bi bi-box-arrow-up-right"></i> 打开工具</a>
+                    <span class="tool-tag">Excel</span>
+                </div>
+            </div>
+            
+            <!-- 占位工具1 -->
+            <div class="tool-card" data-category="其他工具" data-name="JSON格式化工具">
+                <div class="tool-card-header">
+                    <h3>JSON格式化工具</h3>
+                </div>
+                <div class="tool-card-body">
+                    <p>格式化、验证和美化JSON数据，支持语法高亮和错误提示。</p>
+                </div>
+                <div class="tool-card-footer">
+                    <a href="#" class="tool-link"><i class="bi bi-box-arrow-up-right"></i> 即将上线</a>
+                    <span class="tool-tag">新</span>
+                </div>
+            </div>
+            
+            <!-- 占位工具2 -->
+            <div class="tool-card" data-category="其他工具" data-name="时间戳转换工具">
+                <div class="tool-card-header">
+                    <h3>时间戳转换工具</h3>
+                </div>
+                <div class="tool-card-body">
+                    <p>支持Unix时间戳与日期时间格式的相互转换，多种格式可选。</p>
+                </div>
+                <div class="tool-card-footer">
+                    <a href="#" class="tool-link"><i class="bi bi-box-arrow-up-right"></i> 即将上线</a>
+                    <span class="tool-tag">新</span>
+                </div>
+            </div>
+            
+            <!-- 占位工具3 -->
+            <div class="tool-card" data-category="编码解码" data-name="URL编码解码工具">
+                <div class="tool-card-header">
+                    <h3>URL编码解码工具</h3>
+                </div>
+                <div class="tool-card-body">
+                    <p>对URL进行编码和解码操作，支持批量处理和多参数设置。</p>
+                </div>
+                <div class="tool-card-footer">
+                    <a href="#" class="tool-link"><i class="bi bi-box-arrow-up-right"></i> 即将上线</a>
+                    <span class="tool-tag">编码</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div class="container">
+            <p>© 2023 自用工具集合 | 持续更新中</p>
+            <p>如有建议或发现问题，请联系管理员</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const categoryButtons = document.querySelectorAll('.category-btn');
+            const toolCards = document.querySelectorAll('.tool-card');
+            
+            // 搜索功能
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const activeCategory = document.querySelector('.category-btn.active').dataset.category;
+                
+                filterTools(searchTerm, activeCategory);
+            });
+            
+            // 分类过滤
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 更新活跃按钮
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const category = this.dataset.category;
+                    const searchTerm = searchInput.value.toLowerCase();
+                    
+                    filterTools(searchTerm, category);
+                });
+            });
+            
+            // 工具过滤函数
+            function filterTools(searchTerm, category) {
+                let hasVisibleItems = false;
+                
+                toolCards.forEach(card => {
+                    const toolName = card.dataset.name.toLowerCase();
+                    const toolCategory = card.dataset.category;
+                    
+                    const matchesSearch = searchTerm === '' || toolName.includes(searchTerm);
+                    const matchesCategory = category === 'all' || toolCategory === category;
+                    
+                    if (matchesSearch && matchesCategory) {
+                        card.style.display = 'block';
+                        hasVisibleItems = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // 显示或隐藏"无结果"消息
+                const noResults = document.getElementById('noResults');
+                if (!hasVisibleItems) {
+                    if (!noResults) {
+                        const noResultsDiv = document.createElement('div');
+                        noResultsDiv.id = 'noResults';
+                        noResultsDiv.className = 'no-results';
+                        noResultsDiv.innerHTML = `
+                            <i class="bi bi-search"></i>
+                            <h3>未找到匹配的工具</h3>
+                            <p>尝试使用不同的关键词或选择其他分类</p>
+                        `;
+                        document.getElementById('toolsGrid').appendChild(noResultsDiv);
+                    }
+                } else if (noResults) {
+                    noResults.remove();
+                }
+            }
+            
+            // 添加工具计数
+            const toolCount = toolCards.length;
+            const countElement = document.createElement('div');
+            countElement.style.textAlign = 'center';
+            countElement.style.marginBottom = '20px';
+            countElement.style.color = '#7f8c8d';
+            countElement.innerHTML = `共收录 <strong>${toolCount}</strong> 个工具`;
+            document.querySelector('.category-filter').after(countElement);
+        });
+    </script>
+</body>
+</html>
