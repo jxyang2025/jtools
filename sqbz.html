@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>社区自动标注工具 - 网页版</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -208,510 +211,538 @@
             text-align: center;
         }
         
-        .preview {
-            max-height: 400px;
-            overflow: auto;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            margin: 15px 0;
-            background: white;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        
-        th {
-            background: #34495e;
-            color: white;
-            position: sticky;
-            top: 0;
-            font-weight: bold;
-        }
-        
-        tr:nth-child(even) {
+        .debug-info {
             background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #e9ecef;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
         }
         
-        tr:hover {
-            background: #e3f2fd;
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
         }
         
         .community-list {
             max-height: 200px;
             overflow-y: auto;
-            border: 2px solid #ddd;
+            border: 1px solid #ddd;
             border-radius: 8px;
             padding: 10px;
             background: white;
-            margin-bottom: 15px;
         }
         
-        .community-item {
-            padding: 12px;
-            margin: 8px 0;
-            background: white;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .community-item:hover {
-            border-color: #3498db;
-            transform: translateX(5px);
-        }
-        
-        .community-item.selected {
-            border-color: #3498db;
-            background: #e3f2fd;
-            font-weight: bold;
-        }
-        
-        .keywords-area {
-            width: 100%;
-            height: 150px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            padding: 12px;
-            font-family: 'Microsoft YaHei', monospace;
+        .keyword-list {
+            height: 300px;
             resize: vertical;
         }
         
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        .debug-entry {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
         }
         
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 15px 0;
+        .debug-time {
+            color: #6c757d;
+            font-size: 0.85em;
         }
         
-        .stat-box {
-            background: linear-gradient(135deg, #34495e, #2c3e50);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
+        .debug-message {
+            margin-left: 10px;
         }
         
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            margin: 5px 0;
+        .debug-error {
+            color: #dc3545;
         }
         
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.9;
+        .debug-success {
+            color: #28a745;
         }
         
-        .debug-console {
-            background: #2c3e50;
-            color: #27ae60;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-            white-space: pre-wrap;
+        .debug-warning {
+            color: #ffc107;
         }
         
-        @media (max-width: 768px) {
-            .content {
-                grid-template-columns: 1fr;
-            }
-            
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats {
-                grid-template-columns: 1fr;
-            }
+        .debug-info {
+            color: #17a2b8;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏘️ 社区自动标注工具</h1>
-            <p>基于关键词自动标注Excel数据中的社区信息 - 网页版</p>
+            <h1><i class="bi bi-tags-fill"></i> 社区自动标注工具</h1>
+            <p>基于关键词自动标注Excel数据中的社区信息</p>
         </div>
-
-        <div class="content">
-            <!-- 左侧：规则管理 -->
-            <div class="section">
-                <h2 class="section-title">📋 规则管理</h2>
-                
-                <div class="form-group">
-                    <label>🏢 社区列表:</label>
-                    <div class="community-list" id="communityList">
-                        <div class="community-item selected" onclick="selectCommunity(this, '金泰路社区')">金泰路社区</div>
-                        <div class="community-item" onclick="selectCommunity(this, '江湾社区')">江湾社区</div>
-                        <div class="community-item" onclick="selectCommunity(this, '盛世路社区')">盛世路社区</div>
-                        <div class="community-item" onclick="selectCommunity(this, '福城社区')">福城社区</div>
-                        <div class="community-item" onclick="selectCommunity(this, '欣城社区')">欣城社区</div>
-                        <div class="community-item" onclick="selectCommunity(this, '凤亭社区')">凤亭社区</div>
-                        <div class="community-item" onclick="selectCommunity(this, '江滨社区')">江滨社区</div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>🔑 关键词设置 (每行一个关键词):</label>
-                    <textarea id="keywordsInput" class="keywords-area" placeholder="请输入关键词，每行一个。例如：
-金泰
-江湾
-盛世
-福城
-欣城
-凤亭
-江滨"></textarea>
-                </div>
-                
-                <button class="btn btn-primary" onclick="saveKeywords()">💾 保存关键词</button>
-                <button class="btn btn-warning" onclick="clearKeywords()">🗑️ 清空关键词</button>
-            </div>
-
-            <!-- 右侧：文件处理 -->
-            <div class="section">
-                <h2 class="section-title">📊 文件处理</h2>
-                
-                <div class="file-drop" onclick="document.getElementById('fileInput').click()">
-                    <h3>📁 点击或拖放Excel文件到这里</h3>
-                    <p>支持 .xlsx 和 .xls 格式</p>
-                </div>
-                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
-                
-                <div class="form-group">
-                    <label>📝 处理设置:</label>
-   <div class="grid-2">
-                    <div class="form-group">
-                        <label>🔍 关键词列 (字母):</label>
-                        <input type="text" id="keyColumn" value="A" maxlength="2" placeholder="例如: A">
-                    </div>
-                    <div class="form-group">
-                        <label>📝 结果列 (字母):</label>
-                        <input type="text" id="resultColumn" value="B" maxlength="2" placeholder="例如: B">
-                    </div>
-                </div>
-
-                    <div style="margin-top: 10px;">
-                        <label>起始行:</label>
-                        <input type="number" id="startRow" value="2" min="2">
-                    </div>
-                </div>
-                
-                <div class="progress">
-                    <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
-                </div>
-                
-                <button class="btn btn-success" onclick="processFile()" id="processBtn">🚀 开始处理</button>
-                <button class="btn btn-primary" onclick="downloadResult()" id="downloadBtn" disabled>💾 下载结果</button>
-                
-                <div class="stats">
-                    <div class="stat-box">
-                        <div class="stat-label">处理行数</div>
-                        <div class="stat-number" id="processedRows">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">匹配成功</div>
-                        <div class="stat-number" id="matchedRows">0</div>
-                    </div>
-                </div>
-                
-                <div class="status" id="statusMessage">等待处理文件...</div>
-            </div>
-        </div>
-
-        <!-- 底部：数据预览和调试信息 -->
+        
         <div class="content">
             <div class="section">
-                <h2 class="section-title">👀 数据预览</h2>
-                <div class="preview" id="dataPreview">
-                    <p style="text-align: center; color: #7f8c8d; padding: 20px;">上传文件后，数据将在这里显示</p>
+                <h2 class="section-title">规则管理</h2>
+                
+                <div class="form-group">
+                    <label>社区列表</label>
+                    <div class="community-list">
+                        <select id="communitySelect" class="form-select" size="8"></select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <button id="addCommunityBtn" class="btn btn-success"><i class="bi bi-plus-circle"></i> 添加社区</button>
+                    <button id="deleteCommunityBtn" class="btn btn-danger"><i class="bi bi-trash"></i> 删除社区</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>关键词管理</label>
+                    <p class="text-muted">每个关键词占一行</p>
+                    <textarea id="keywordsText" class="form-control keyword-list"></textarea>
+                    <button id="saveKeywordsBtn" class="btn btn-primary mt-2"><i class="bi bi-save"></i> 保存关键词</button>
+                </div>
+                
+                <div class="form-group">
+                    <button id="resetRulesBtn" class="btn btn-warning"><i class="bi bi-arrow-clockwise"></i> 重置为默认规则</button>
+                    <button id="exportRulesBtn" class="btn btn-info"><i class="bi bi-box-arrow-up"></i> 导出规则</button>
+                    <input type="file" id="importRulesInput" accept=".json" style="display: none;">
+                    <button id="importRulesBtn" class="btn btn-info"><i class="bi bi-box-arrow-in-down"></i> 导入规则</button>
                 </div>
             </div>
             
             <div class="section">
-                <h2 class="section-title">🐛 调试信息</h2>
-                <div class="debug-console" id="debugConsole">系统就绪...</div>
+                <h2 class="section-title">文件处理</h2>
+                
+                <div class="form-group">
+                    <label for="keyColumn">关键词列(字母):</label>
+                    <input type="text" id="keyColumn" class="form-control" value="A">
+                </div>
+                
+                <div class="form-group">
+                    <label for="resultColumn">结果列(字母):</label>
+                    <input type="text" id="resultColumn" class="form-control" value="B">
+                </div>
+                
+                <div class="file-drop" id="dropArea">
+                    <h3><i class="bi bi-file-earmark-excel"></i> 拖放Excel文件到此处</h3>
+                    <p class="text-muted">或点击选择文件</p>
+                    <input type="file" id="fileInput" accept=".xlsx, .xls" style="display: none;">
+                    <button id="browseBtn" class="btn btn-primary"><i class="bi bi-folder2-open"></i> 浏览文件</button>
+                </div>
+                
+                <div class="form-group">
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                    </div>
+                </div>
+                
+                <div class="status">
+                    <span id="statusText">准备就绪</span>
+                </div>
+                
+                <div class="form-group">
+                    <button id="processBtn" class="btn btn-success" disabled><i class="bi bi-play-circle"></i> 开始处理</button>
+                    <button id="downloadBtn" class="btn btn-primary" disabled><i class="bi bi-download"></i> 下载结果</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="debug-section" style="padding: 20px;">
+            <div class="debug-header">
+                <h3 class="section-title">调试信息</h3>
+                <button id="clearDebugBtn" class="btn btn-sm btn-outline-secondary"><i class="bi bi-trash"></i> 清空日志</button>
+            </div>
+            <div id="debugInfo" class="debug-info">
+                <div class="debug-entry">
+                    <span class="debug-time">[系统]</span>
+                    <span class="debug-message debug-info">应用程序已初始化</span>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 全局变量
-        let processedWorkbook = null;
-        let jsonData = [];
-        let currentFileName = '';
-        let matchedRows = 0;
-        let communityRules = {
-            '金泰路社区': ['金泰', '金泰路'],
-            '江湾社区': ['江湾', '江湾路'],
-            '盛世路社区': ['盛世', '盛世路'],
-            '福城社区': ['福城', '福城路'],
-            '欣城社区': ['欣城', '欣城路'],
-            '凤亭社区': ['凤亭', '凤亭路'],
-            '江滨社区': ['江滨', '江滨路']
+        // 默认的社区关键字映射规则
+        let communityMapping = {
+            "金泰路社区": ["聚江苑", "鸿江苑", "金泰"],
+            "江湾社区": ["江湾", "江湾路"],
+            "盛世路社区": ["盛世", "盛世路"],
+            "福城社区": ["福城", "福城路"],
+            "欣城社区": ["欣城", "欣城路"],
+            "凤亭社区": ["凤亭", "凤亭路"],
+            "江滨社区": ["江滨", "江滨路"]
         };
-        let selectedCommunity = '金泰路社区';
+        
+        let processedData = null;
+        let currentFileName = "";
+        let debugEntries = [];
 
-        // 初始化
-        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
-        
-        // 选择社区
-        function selectCommunity(element, community) {
-            document.querySelectorAll('.community-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            element.classList.add('selected');
-            selectedCommunity = community;
-            debugLog(`已选择社区: ${community}`);
-        }
-        
-        // 保存关键词
-        function saveKeywords() {
-            const keywordsText = document.getElementById('keywordsInput').value;
-            const keywords = keywordsText.split('\n').filter(k => k.trim() !== '');
+        // 添加调试信息
+        function addDebugMessage(message, type = "info") {
+            const now = new Date();
+            const timeString = `[${now.toLocaleTimeString()}]`;
+            debugEntries.push({ time: timeString, message, type });
             
-            if (keywords.length === 0) {
-                debugLog('❌ 请输入至少一个关键词');
-                return;
+            // 更新UI
+            updateDebugDisplay();
+        }
+
+        // 更新调试信息显示
+        function updateDebugDisplay() {
+            const debugContainer = document.getElementById('debugInfo');
+            debugContainer.innerHTML = '';
+            
+            debugEntries.forEach(entry => {
+                const entryEl = document.createElement('div');
+                entryEl.className = 'debug-entry';
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'debug-time';
+                timeSpan.textContent = entry.time;
+                
+                const messageSpan = document.createElement('span');
+                messageSpan.className = `debug-message debug-${entry.type}`;
+                messageSpan.textContent = entry.message;
+                
+                entryEl.appendChild(timeSpan);
+                entryEl.appendChild(messageSpan);
+                debugContainer.appendChild(entryEl);
+            });
+            
+            // 滚动到底部
+            debugContainer.scrollTop = debugContainer.scrollHeight;
+        }
+
+        // 初始化社区选择列表
+        function initCommunitySelect() {
+            const select = document.getElementById('communitySelect');
+            select.innerHTML = '';
+            
+            for (const community in communityMapping) {
+                const option = document.createElement('option');
+                option.value = community;
+                option.textContent = community;
+                select.appendChild(option);
             }
             
-            communityRules[selectedCommunity] = keywords;
-            debugLog(`✅ 已为【${selectedCommunity}】保存关键词: ${keywords.join(', ')}`);
-            updateStatus(`✅ 已为【${selectedCommunity}】保存关键词`);
+            // 默认选择第一个社区
+            if (select.options.length > 0) {
+                select.selectedIndex = 0;
+                updateKeywordTextarea();
+            }
+            
+            addDebugMessage(`已加载 ${Object.keys(communityMapping).length} 个社区规则`, "success");
         }
-        
-        // 清空关键词
-        function clearKeywords() {
-            document.getElementById('keywordsInput').value = '';
-            debugLog('已清空关键词输入框');
+
+        // 更新关键词文本框
+        function updateKeywordTextarea() {
+            const select = document.getElementById('communitySelect');
+            const community = select.value;
+            
+            if (community && communityMapping[community]) {
+                document.getElementById('keywordsText').value = communityMapping[community].join('\n');
+            } else {
+                document.getElementById('keywordsText').value = '';
+            }
         }
-        
-        // 处理文件选择
-        function handleFileSelect(e) {
+
+        // 添加新社区
+        document.getElementById('addCommunityBtn').addEventListener('click', function() {
+            const newCommunity = prompt('请输入新社区名称:');
+            if (newCommunity && !communityMapping[newCommunity]) {
+                communityMapping[newCommunity] = [];
+                initCommunitySelect();
+                
+                // 选择新添加的社区
+                const select = document.getElementById('communitySelect');
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value === newCommunity) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+                updateKeywordTextarea();
+                
+                addDebugMessage(`已添加社区: ${newCommunity}`, "success");
+                document.getElementById('statusText').textContent = `已添加社区: ${newCommunity}`;
+            } else if (communityMapping[newCommunity]) {
+                addDebugMessage(`社区 "${newCommunity}" 已存在`, "warning");
+                alert('该社区已存在!');
+            }
+        });
+
+        // 删除社区
+        document.getElementById('deleteCommunityBtn').addEventListener('click', function() {
+            const select = document.getElementById('communitySelect');
+            const community = select.value;
+            
+            if (community && confirm(`确定要删除社区 "${community}" 吗?`)) {
+                delete communityMapping[community];
+                initCommunitySelect();
+                updateKeywordTextarea();
+                
+                addDebugMessage(`已删除社区: ${community}`, "warning");
+                document.getElementById('statusText').textContent = `已删除社区: ${community}`;
+            }
+        });
+
+        // 保存关键词
+        document.getElementById('saveKeywordsBtn').addEventListener('click', function() {
+            const select = document.getElementById('communitySelect');
+            const community = select.value;
+            const keywords = document.getElementById('keywordsText').value.split('\n')
+                .map(k => k.trim())
+                .filter(k => k !== '');
+            
+            if (community && keywords.length > 0) {
+                communityMapping[community] = keywords;
+                addDebugMessage(`已保存 ${keywords.length} 个关键词到社区 "${community}"`, "success");
+                document.getElementById('statusText').textContent = `已保存 ${keywords.length} 个关键词到 ${community}`;
+            } else {
+                addDebugMessage('保存失败：请先选择社区并输入至少一个关键词!', "error");
+                alert('请先选择社区并输入至少一个关键词!');
+            }
+        });
+
+        // 重置为默认规则
+        document.getElementById('resetRulesBtn').addEventListener('click', function() {
+            if (confirm('确定要重置为默认规则吗？当前规则将会丢失。')) {
+                communityMapping = {
+                    "金泰路社区": ["聚江苑", "鸿江苑", "金泰"],
+                    "江湾社区": ["江湾", "江湾路"],
+                    "盛世路社区": ["盛世", "盛世路"],
+                    "福城社区": ["福城", "福城路"],
+                    "欣城社区": ["欣城", "欣城路"],
+                    "凤亭社区": ["凤亭", "凤亭路"],
+                    "江滨社区": ["江滨", "江滨路"]
+                };
+                initCommunitySelect();
+                addDebugMessage('已重置为默认规则', "success");
+                document.getElementById('statusText').textContent = '已重置为默认规则';
+            }
+        });
+
+        // 导出规则
+        document.getElementById('exportRulesBtn').addEventListener('click', function() {
+            const dataStr = JSON.stringify(communityMapping, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            saveAs(blob, 'community_rules.json');
+            addDebugMessage('规则已导出为JSON文件', "success");
+            document.getElementById('statusText').textContent = '规则已导出';
+        });
+
+        // 导入规则
+        document.getElementById('importRulesBtn').addEventListener('click', function() {
+            document.getElementById('importRulesInput').click();
+        });
+
+        document.getElementById('importRulesInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             
-            currentFileName = file.name;
             const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedRules = JSON.parse(e.target.result);
+                    communityMapping = importedRules;
+                    initCommunitySelect();
+                    addDebugMessage('规则已成功导入', "success");
+                    document.getElementById('statusText').textContent = '规则已导入';
+                } catch (error) {
+                    addDebugMessage('导入失败: 文件格式不正确', "error");
+                    alert('导入失败: 文件格式不正确');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // 文件处理部分
+        document.getElementById('browseBtn').addEventListener('click', function() {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('dropArea').addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.backgroundColor = '#d1e7ff';
+        });
+
+        document.getElementById('dropArea').addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.backgroundColor = '#f1f8ff';
+        });
+
+        document.getElementById('dropArea').addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.backgroundColor = '#f1f8ff';
             
+            const files = e.dataTransfer.files;
+            if (files.length && (files[0].name.endsWith('.xlsx') || files[0].name.endsWith('.xls'))) {
+                handleFile(files[0]);
+            } else {
+                addDebugMessage('请上传Excel文件(.xlsx或.xls)', "error");
+                alert('请上传Excel文件(.xlsx或.xls)');
+            }
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            if (this.files.length) {
+                handleFile(this.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            currentFileName = file.name;
+            document.getElementById('statusText').textContent = `已加载: ${file.name}`;
+            addDebugMessage(`已加载文件: ${file.name}`, "info");
+            
+            const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    processWorkbook(data);
-                    updateStatus('✅ 文件加载成功！');
+                    processedData = XLSX.read(data, {type: 'array'});
+                    document.getElementById('processBtn').disabled = false;
+                    document.getElementById('statusText').textContent = `准备处理: ${file.name}`;
+                    addDebugMessage('Excel文件解析成功，可以开始处理', "success");
                 } catch (error) {
-                    debugLog('❌ 文件读取错误: ' + error.message);
-                    updateStatus('❌ 文件读取失败');
+                    console.error(error);
+                    addDebugMessage('文件读取失败，请确保是有效的Excel文件', "error");
+                    alert('文件读取失败，请确保是有效的Excel文件');
                 }
             };
-            
-            reader.onerror = function() {
-                debugLog('❌ 文件读取失败');
-                updateStatus('❌ 文件读取失败');
-            };
-            
             reader.readAsArrayBuffer(file);
         }
-        
-        // 处理工作簿
-        function processWorkbook(data) {
-            try {
-                processedWorkbook = XLSX.read(data, { type: 'array' });
-                const worksheet = processedWorkbook.Sheets[processedWorkbook.SheetNames[0]];
-                jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                
-                debugLog(`✅ 文件加载成功: ${currentFileName}`);
-                debugLog(`数据行数: ${jsonData.length}`);
-                
-                showPreview(processedWorkbook);
-                document.getElementById('processBtn').disabled = false;
-                
-            } catch (error) {
-                debugLog('❌ 处理Excel文件时出错: ' + error.message);
-                updateStatus('❌ 处理Excel文件时出错');
-            }
-        }
-        
-        // 显示预览
-        function showPreview(workbook) {
-            const previewDiv = document.getElementById('dataPreview');
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const html = XLSX.utils.sheet_to_html(worksheet);
-            previewDiv.innerHTML = html;
-        }
-        
-        // 处理文件
-        function processFile() {
-            if (!processedWorkbook) {
-                debugLog('❌ 请先选择Excel文件');
+
+        // 处理Excel数据
+        document.getElementById('processBtn').addEventListener('click', function() {
+            if (!processedData) {
+                addDebugMessage('请先上传Excel文件', "error");
+                alert('请先上传Excel文件');
                 return;
             }
             
-            const keyColLetter = document.getElementById('keyColumn').value.toUpperCase();
-            const resultColLetter = document.getElementById('resultColumn').value.toUpperCase();
-            const startRow = parseInt(document.getElementById('startRow').value) || 2;
+            const keyColumn = document.getElementById('keyColumn').value.toUpperCase();
+            const resultColumn = document.getElementById('resultColumn').value.toUpperCase();
             
-            const worksheet = processedWorkbook.Sheets[processedWorkbook.SheetNames[0]];
-            
-            // 获取实际数据范围
-            const totalDataRows = jsonData.length;
-            
-            matchedRows = 0;
-            let processed = 0;
-            
-            debugLog(`开始处理: 关键词列=${keyColLetter}, 结果列=${resultColLetter}, 起始行=${startRow}`);
-            
-            // 将列字母转换为列索引（A=0, B=1, ...）
-            const keyColIndex = XLSX.utils.decode_col(keyColLetter);
-            const resultColIndex = XLSX.utils.decode_col(resultColLetter);
-            
-            // 处理每一行（从起始行开始）
-            for (let row = startRow - 1; row < totalDataRows; row++) { // -1 因为数组从0开始
-                if (!jsonData[row] || !jsonData[row][keyColIndex]) continue;
+            try {
+                const worksheet = processedData.Sheets[processedData.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
                 
-                const cellValue = String(jsonData[row][keyColIndex] || '');
-                if (!cellValue || cellValue === 'None') continue;
+                // 转换列字母为数字索引 (A=0, B=1, ...)
+                const keyColIndex = keyColumn.charCodeAt(0) - 65;
+                const resultColIndex = resultColumn.charCodeAt(0) - 65;
                 
-                // 查找匹配的社区
-                const community = findMatchingCommunity(cellValue);
+                let processedCount = 0;
+                let matchedCount = 0;
                 
-                if (community) {
-                    // 直接更新数据数组
-                    if (!jsonData[row]) jsonData[row] = [];
-                    jsonData[row][resultColIndex] = community;
+                addDebugMessage(`开始处理数据，关键词列: ${keyColumn}，结果列: ${resultColumn}`, "info");
+                
+                // 处理每一行数据（跳过表头）
+                for (let i = 1; i < jsonData.length; i++) {
+                    if (!jsonData[i] || jsonData[i].length <= keyColIndex) continue;
                     
-                    // 创建单元格地址
-                    const cellAddress = XLSX.utils.encode_cell({c: resultColIndex, r: row});
+                    const cellValue = String(jsonData[i][keyColIndex] || '').toLowerCase();
+                    let matched = false;
                     
-                    // 更新工作表
-                    worksheet[cellAddress] = {
-                        t: 's', // 字符串类型
-                        v: community
-                    };
-                    
-                    matchedRows++;
-                    debugLog(`✅ 行 ${row + 1}: "${cellValue}" -> "${community}"`);
-                } else {
-                    debugLog(`❌ 行 ${row + 1}: "${cellValue}" -> 未匹配`);
-                }
-                
-                // 更新进度
-                processed++;
-                const progress = Math.round((processed / (totalDataRows - startRow + 1)) * 100);
-                updateProgress(progress, `处理中: ${processed}/${totalDataRows - startRow + 1} 行，已匹配: ${matchedRows}`);
-            }
-            
-            // 更新工作表的范围引用
-            const newRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-            // 确保范围包含所有处理过的行
-            newRange.e.r = Math.max(newRange.e.r, totalDataRows - 1);
-            worksheet['!ref'] = XLSX.utils.encode_range(newRange);
-            
-            updateProgress(100, `✅ 处理完成! 共处理 ${processed} 行，匹配 ${matchedRows} 条记录`);
-            document.getElementById('downloadBtn').disabled = false;
-            document.getElementById('matchedRows').textContent = matchedRows;
-            document.getElementById('processedRows').textContent = processed;
-            
-            debugLog(`✅ 处理完成! 共处理 ${processed} 行，匹配 ${matchedRows} 条记录`);
-            
-            // 更新预览
-            showPreview(processedWorkbook);
-        }
-        
-        // 查找匹配的社区
-        function findMatchingCommunity(value) {
-            value = String(value || '').toLowerCase();
-            
-            for (const [community, keywords] of Object.entries(communityRules)) {
-                for (const keyword of keywords) {
-                    if (value.includes(keyword.toLowerCase())) {
-                        return community;
+                    // 检查所有社区的关键词
+                    for (const [community, keywords] of Object.entries(communityMapping)) {
+                        for (const keyword of keywords) {
+                            if (cellValue.includes(keyword.toLowerCase())) {
+                                // 确保行有足够的列
+                                while (jsonData[i].length <= resultColIndex) {
+                                    jsonData[i].push('');
+                                }
+                                jsonData[i][resultColIndex] = community;
+                                matched = true;
+                                matchedCount++;
+                                
+                                // 记录匹配详情到调试信息
+                                if (matchedCount <= 10) { // 只记录前10条匹配，避免信息过多
+                                    addDebugMessage(`行 ${i+1}: "${cellValue}" 匹配到社区 "${community}" (关键词: "${keyword}")`, "success");
+                                }
+                                break;
+                            }
+                        }
+                        if (matched) break;
                     }
+                    
+                    processedCount++;
+                    
+                    // 更新进度
+                    const progress = Math.floor((i / jsonData.length) * 100);
+                    document.getElementById('progressBar').style.width = `${progress}%`;
+                    document.getElementById('progressBar').textContent = `${progress}%`;
+                    document.getElementById('statusText').textContent = 
+                        `处理中: ${processedCount}/${jsonData.length} 行, 已匹配: ${matchedCount}`;
                 }
+                
+                // 将修改后的数据保存回工作表
+                const newWorksheet = XLSX.utils.aoa_to_sheet(jsonData);
+                processedData.Sheets[processedData.SheetNames[0]] = newWorksheet;
+                
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressBar').textContent = '100%';
+                document.getElementById('statusText').textContent = 
+                    `处理完成! 共处理 ${processedCount} 行, 匹配 ${matchedCount} 处`;
+                document.getElementById('downloadBtn').disabled = false;
+                
+                addDebugMessage(`处理完成! 共处理 ${processedCount} 行数据，匹配 ${matchedCount} 处`, "success");
+                
+            } catch (error) {
+                console.error(error);
+                addDebugMessage('处理文件时发生错误: ' + error.message, "error");
+                alert('处理文件时发生错误');
             }
-            
-            return null;
-        }
-        
-        // 下载结果
-        function downloadResult() {
-            if (!processedWorkbook) {
-                debugLog('❌ 没有处理后的文件可供下载');
+        });
+
+        // 下载处理后的文件
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            if (!processedData) {
+                addDebugMessage('没有可下载的数据', "error");
+                alert('没有可下载的数据');
                 return;
             }
             
             try {
-                // 确保使用最新的jsonData更新工作表
-                const worksheet = processedWorkbook.Sheets[processedWorkbook.SheetNames[0]];
-                const newWorksheet = XLSX.utils.aoa_to_sheet(jsonData);
+                const wbout = XLSX.write(processedData, {bookType: 'xlsx', type: 'array'});
+                const blob = new Blob([wbout], {type: 'application/octet-stream'});
                 
-                // 合并属性（保留格式等）
-                Object.assign(worksheet, newWorksheet);
+                // 生成文件名
+                const timestamp = new Date().getTime();
+                const downloadName = currentFileName.replace(/\.(xlsx|xls)$/i, '') + 
+                                    `_标注结果_${timestamp}.xlsx`;
                 
-                const wbout = XLSX.write(processedWorkbook, { bookType: 'xlsx', type: 'array' });
-                const blob = new Blob([wbout], { type: 'application/octet-stream' });
-                
-                const baseName = currentFileName.replace(/\.(xlsx|xls)$/i, '');
-                const saveName = `${baseName}_社区标注_${new Date().getTime()}.xlsx`;
-                
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = saveName;
-                document.body.appendChild(a);
-                a.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
-                
-                updateStatus(`✅ 文件已下载: ${saveName}`);
-                debugLog(`✅ 文件已下载: ${saveName}`);
+                saveAs(blob, downloadName);
+                addDebugMessage(`文件已下载: ${downloadName}`, "success");
+                document.getElementById('statusText').textContent = `文件已下载: ${downloadName}`;
             } catch (error) {
-                debugLog('❌ 文件保存失败: ' + error.message);
+                console.error(error);
+                addDebugMessage('下载文件时发生错误: ' + error.message, "error");
+                alert('下载文件时发生错误');
             }
-        }
-        
-        // 更新进度
-        function updateProgress(percent, message) {
-            const progressBar = document.getElementById('progressBar');
-            progressBar.style.width = percent + '%';
-            progressBar.textContent = percent + '%';
-            updateStatus(message);
-        }
-        
-        // 更新状态
-        function updateStatus(message) {
-            document.getElementById('statusMessage').textContent = message;
-        }
-        
-        // 调试日志
-        function debugLog(message) {
-            const console = document.getElementById('debugConsole');
-            const timestamp = new Date().toLocaleTimeString();
-            console.innerHTML += `[${timestamp}] ${message}\n`;
-            console.scrollTop = console.scrollHeight;
-        }
+        });
+
+        // 清空调试信息
+        document.getElementById('clearDebugBtn').addEventListener('click', function() {
+            debugEntries = [];
+            updateDebugDisplay();
+            addDebugMessage('调试日志已清空', "info");
+        });
+
+        // 社区选择改变时更新关键词框
+        document.getElementById('communitySelect').addEventListener('change', updateKeywordTextarea);
+
+        // 初始化页面
+        initCommunitySelect();
+        addDebugMessage('社区自动标注工具已准备就绪', "info");
     </script>
 </body>
 </html>
