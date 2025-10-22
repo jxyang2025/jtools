@@ -372,26 +372,34 @@
                 </div>
                 
                 <div class="form-group">
-                    <button class="btn btn-primary" onclick="addCommunity()">➕ 添加社区</button>
-                    <button class="btn btn-danger" onclick="deleteCommunity()">🗑️ 删除社区</button>
+                    <label>🔑 关键词设置 (每行一个关键词):</label>
+                    <textarea id="keywordsInput" class="keywords-area" placeholder="请输入关键词，每行一个。例如：
+金泰
+江湾
+盛世
+福城
+欣城
+凤亭
+江滨"></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label>🔑 关键词管理 (每行一个关键词):</label>
-                    <textarea class="keywords-area" id="keywordsText" placeholder="请输入关键词，每行一个..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <button class="btn btn-success" onclick="saveKeywords()">💾 保存关键词</button>
-                    <button class="btn btn-warning" onclick="resetRules()">🔄 重置默认规则</button>
-                </div>
+                <button class="btn btn-primary" onclick="saveKeywords()">💾 保存关键词</button>
+                <button class="btn btn-warning" onclick="clearKeywords()">🗑️ 清空关键词</button>
             </div>
 
             <!-- 右侧：文件处理 -->
             <div class="section">
-                <h2 class="section-title">📂 文件处理</h2>
+                <h2 class="section-title">📊 文件处理</h2>
                 
-                <div class="grid-2">
+                <div class="file-drop" onclick="document.getElementById('fileInput').click()">
+                    <h3>📁 点击或拖放Excel文件到这里</h3>
+                    <p>支持 .xlsx 和 .xls 格式</p>
+                </div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+                
+                <div class="form-group">
+                    <label>📝 处理设置:</label>
+   <div class="grid-2">
                     <div class="form-group">
                         <label>🔍 关键词列 (字母):</label>
                         <input type="text" id="keyColumn" value="A" maxlength="2" placeholder="例如: A">
@@ -401,317 +409,157 @@
                         <input type="text" id="resultColumn" value="B" maxlength="2" placeholder="例如: B">
                     </div>
                 </div>
+
+                    <div style="margin-top: 10px;">
+                        <label>起始行:</label>
+                        <input type="number" id="startRow" value="2" min="2">
+                    </div>
+                </div>
                 
-                <div class="form-group">
-                    <label>📊 起始行号:</label>
-                    <input type="number" id="startRow" value="2" min="1" placeholder="从第几行开始">
-                </div>
-
-                <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()">
-                    <h3>📁 拖放Excel文件到此处</h3>
-                    <p>或点击选择文件 (.xlsx, .xls)</p>
-                    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" onchange="handleFileSelect(this.files[0])">
-                </div>
-
-                <div class="status" id="status">✅ 准备就绪 - 请选择Excel文件</div>
-
-                <div class="stats">
-                    <div class="stat-box">
-                        <div class="stat-label">总行数</div>
-                        <div class="stat-number" id="totalRows">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">已匹配</div>
-                        <div class="stat-number" id="matchedRows">0</div>
-                    </div>
-                </div>
-
                 <div class="progress">
                     <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
                 </div>
+                
+                <button class="btn btn-success" onclick="processFile()" id="processBtn">🚀 开始处理</button>
+                <button class="btn btn-primary" onclick="downloadResult()" id="downloadBtn" disabled>💾 下载结果</button>
+                
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">处理行数</div>
+                        <div class="stat-number" id="processedRows">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">匹配成功</div>
+                        <div class="stat-number" id="matchedRows">0</div>
+                    </div>
+                </div>
+                
+                <div class="status" id="statusMessage">等待处理文件...</div>
+            </div>
+        </div>
 
-                <div class="form-group" style="text-align: center;">
-                    <button class="btn btn-success" id="processBtn" onclick="processFile()" disabled>🚀 开始处理</button>
-                    <button class="btn btn-primary" id="downloadBtn" onclick="downloadResult()" disabled>📥 下载结果</button>
+        <!-- 底部：数据预览和调试信息 -->
+        <div class="content">
+            <div class="section">
+                <h2 class="section-title">👀 数据预览</h2>
+                <div class="preview" id="dataPreview">
+                    <p style="text-align: center; color: #7f8c8d; padding: 20px;">上传文件后，数据将在这里显示</p>
                 </div>
             </div>
-        </div>
-
-        <!-- 数据预览 -->
-        <div class="section">
-            <h2 class="section-title">👀 数据预览</h2>
-            <div class="preview" id="previewContainer">
-                <p style="text-align: center; padding: 20px; color: #666;">请选择Excel文件后显示预览...</p>
-            </div>
-        </div>
-        
-        <!-- 调试控制台 -->
-        <div class="section">
-            <h2 class="section-title">🐛 调试控制台</h2>
-            <div class="debug-console" id="debugConsole">
-                > 系统已就绪，等待文件加载...
+            
+            <div class="section">
+                <h2 class="section-title">🐛 调试信息</h2>
+                <div class="debug-console" id="debugConsole">系统就绪...</div>
             </div>
         </div>
     </div>
 
     <script>
-        // 默认的社区关键字映射规则
-        const DEFAULT_COMMUNITY_MAPPING = {
-            "金泰路社区": ["聚江苑", "鸿江苑", "达江苑", "望江苑", "星江苑", "赏江苑", "揽江苑", "咏江苑", "金泰路社区"],
-            "江湾社区": ["融江苑", "映江苑", "瑞江苑", "临江苑", "贯江苑", "豪江苑", "江湾社区"],
-            "盛世路社区": ["盛世路社区", "悦江苑", "湘江豪庭", "富湾国际"],
-            "福城社区": ["新领地公寓", "北国风光", "水韵花都", "水岸兰庭", "恒大御景半岛一期", "湘江苑",
-                         "福天兴业", "检察院宿舍", "公安局小区", "金霞小区", "二十二片地", "二十三片地",
-                         "纸业市场", "23号地", "22号地", "福城社区"],
-            "欣城社区": ["黄金海岸", "景香苑", "法苑", "恒鑫澜北湾", "澜北湾", "滨江美寓", "广福园", "欣城社区"],
-            "凤亭社区": ["金霞苑", "江临天下", "清澜苑", "长泰豪园", "世纪春天", "世纪云中心", "和平花园", "网船班",
-                         "凤亭社区"],
-            "江滨社区": ["锦绣苑", "江滨玫瑰园", "十号重建地", "7号重建地", "7号地", "10号地"]
-        };
-
-        let communityMapping = {...DEFAULT_COMMUNITY_MAPPING};
-        let keywordToCommunity = {};
+        // 全局变量
         let processedWorkbook = null;
-        let currentFileName = "";
-        let selectedCommunity = "金泰路社区";
-        let totalRows = 0;
+        let jsonData = [];
+        let currentFileName = '';
         let matchedRows = 0;
+        let communityRules = {
+            '金泰路社区': ['金泰', '金泰路'],
+            '江湾社区': ['江湾', '江湾路'],
+            '盛世路社区': ['盛世', '盛世路'],
+            '福城社区': ['福城', '福城路'],
+            '欣城社区': ['欣城', '欣城路'],
+            '凤亭社区': ['凤亭', '凤亭路'],
+            '江滨社区': ['江滨', '江滨路']
+        };
+        let selectedCommunity = '金泰路社区';
 
         // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            updateKeywordMapping();
-            setupDragAndDrop();
-            loadKeywordsForSelectedCommunity();
-        });
-
-        // 设置拖放功能
-        function setupDragAndDrop() {
-            const dropArea = document.getElementById('fileDrop');
-            
-            dropArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropArea.style.background = 'rgba(52, 152, 219, 0.3)';
-            });
-            
-            dropArea.addEventListener('dragleave', () => {
-                dropArea.style.background = 'rgba(52, 152, 219, 0.1)';
-            });
-            
-            dropArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropArea.style.background = 'rgba(52, 152, 219, 0.1)';
-                
-                if (e.dataTransfer.files.length) {
-                    handleFileSelect(e.dataTransfer.files[0]);
-                }
-            });
-        }
-
-        // 更新关键字映射
-        function updateKeywordMapping() {
-            keywordToCommunity = {};
-            for (const community in communityMapping) {
-                communityMapping[community].forEach(keyword => {
-                    keywordToCommunity[keyword] = community;
-                });
-            }
-            debugLog("关键字映射已更新，共 " + Object.keys(keywordToCommunity).length + " 个关键词");
-        }
-
-        // 调试日志
-        function debugLog(message) {
-            const consoleElement = document.getElementById('debugConsole');
-            consoleElement.innerHTML += `\n> ${message}`;
-            consoleElement.scrollTop = consoleElement.scrollHeight;
-            console.log(message);
-        }
-
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        
         // 选择社区
         function selectCommunity(element, community) {
-            // 移除之前的选择
             document.querySelectorAll('.community-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            
-            // 添加新的选择
             element.classList.add('selected');
             selectedCommunity = community;
-            
-            // 加载该社区的关键词
-            loadKeywordsForSelectedCommunity();
-            debugLog("已选择社区: " + community);
+            debugLog(`已选择社区: ${community}`);
         }
-
-        // 加载选中社区的关键词
-        function loadKeywordsForSelectedCommunity() {
-            if (selectedCommunity && communityMapping[selectedCommunity]) {
-                document.getElementById('keywordsText').value = communityMapping[selectedCommunity].join('\n');
-            }
-        }
-
-        // 添加社区
-        function addCommunity() {
-            const name = prompt('请输入社区名称:');
-            if (name && !communityMapping[name]) {
-                communityMapping[name] = [];
-                // 添加到UI
-                const communityList = document.getElementById('communityList');
-                const newItem = document.createElement('div');
-                newItem.className = 'community-item';
-                newItem.textContent = name;
-                newItem.onclick = function() { selectCommunity(this, name); };
-                communityList.appendChild(newItem);
-                
-                updateKeywordMapping();
-                debugLog(`✅ 社区 "${name}" 已添加`);
-            } else if (name) {
-                debugLog(`❌ 社区 "${name}" 已存在`);
-            }
-        }
-
-        // 删除社区
-        function deleteCommunity() {
-            if (!selectedCommunity) {
-                debugLog('❌ 请先选择一个社区');
-                return;
-            }
-            
-            if (confirm(`确定要删除社区 "${selectedCommunity}" 吗？`)) {
-                delete communityMapping[selectedCommunity];
-                updateKeywordMapping();
-                
-                // 从UI移除
-                const items = document.querySelectorAll('.community-item');
-                items.forEach(item => {
-                    if (item.textContent === selectedCommunity) {
-                        item.remove();
-                    }
-                });
-                
-                // 选择第一个社区
-                if (items.length > 0) {
-                    items[0].click();
-                } else {
-                    selectedCommunity = "";
-                    document.getElementById('keywordsText').value = '';
-                }
-                
-                debugLog(`✅ 社区 "${selectedCommunity}" 已删除`);
-            }
-        }
-
+        
         // 保存关键词
         function saveKeywords() {
-            if (!selectedCommunity) {
-                debugLog('❌ 请先选择一个社区');
+            const keywordsText = document.getElementById('keywordsInput').value;
+            const keywords = keywordsText.split('\n').filter(k => k.trim() !== '');
+            
+            if (keywords.length === 0) {
+                debugLog('❌ 请输入至少一个关键词');
                 return;
             }
             
-            const keywordsText = document.getElementById('keywordsText').value;
-            const keywords = keywordsText.split('\n')
-                .map(kw => kw.trim())
-                .filter(kw => kw.length > 0);
-            
-            communityMapping[selectedCommunity] = keywords;
-            updateKeywordMapping();
-            debugLog('✅ 关键词已保存');
+            communityRules[selectedCommunity] = keywords;
+            debugLog(`✅ 已为【${selectedCommunity}】保存关键词: ${keywords.join(', ')}`);
+            updateStatus(`✅ 已为【${selectedCommunity}】保存关键词`);
         }
-
-        // 重置规则
-        function resetRules() {
-            if (confirm('确定要重置为默认规则吗？')) {
-                communityMapping = {...DEFAULT_COMMUNITY_MAPPING};
-                updateKeywordMapping();
-                
-                // 更新UI
-                const communityList = document.getElementById('communityList');
-                communityList.innerHTML = '';
-                
-                for (const community in communityMapping) {
-                    const item = document.createElement('div');
-                    item.className = 'community-item';
-                    item.textContent = community;
-                    item.onclick = function() { selectCommunity(this, community); };
-                    communityList.appendChild(item);
-                }
-                
-                // 选择第一个社区
-                if (communityList.firstChild) {
-                    communityList.firstChild.click();
-                }
-                
-                debugLog('✅ 已重置为默认规则');
-            }
+        
+        // 清空关键词
+        function clearKeywords() {
+            document.getElementById('keywordsInput').value = '';
+            debugLog('已清空关键词输入框');
         }
-
+        
         // 处理文件选择
-        function handleFileSelect(file) {
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
             if (!file) return;
             
-            if (!file.name.match(/\.(xlsx|xls)$/i)) {
-                debugLog('❌ 请选择Excel文件 (.xlsx 或 .xls)');
-                return;
-            }
-            
             currentFileName = file.name;
-            updateStatus(`✅ 已选择文件: ${file.name}`);
-            debugLog(`📁 已选择文件: ${file.name}`);
-            
             const reader = new FileReader();
+            
             reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    processedWorkbook = XLSX.read(data, { type: 'array', cellText: false, cellDates: true });
-                    
-                    // 显示预览
-                    showPreview(processedWorkbook);
-                    
-                    document.getElementById('processBtn').disabled = false;
-                    updateStatus(`✅ 文件加载成功，共 ${totalRows} 行数据`);
-                    debugLog(`✅ 文件加载成功，共 ${totalRows} 行数据`);
+                    processWorkbook(data);
+                    updateStatus('✅ 文件加载成功！');
                 } catch (error) {
-                    debugLog('❌ 文件读取失败: ' + error.message);
+                    debugLog('❌ 文件读取错误: ' + error.message);
+                    updateStatus('❌ 文件读取失败');
                 }
             };
+            
+            reader.onerror = function() {
+                debugLog('❌ 文件读取失败');
+                updateStatus('❌ 文件读取失败');
+            };
+            
             reader.readAsArrayBuffer(file);
         }
-
-        // 显示预览
-        function showPreview(workbook) {
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            
-            totalRows = jsonData.length - 1; // 减去标题行
-            document.getElementById('totalRows').textContent = totalRows;
-            
-            if (jsonData.length > 0) {
-                let html = '<table>';
-                // 表头
-                html += '<tr>';
-                jsonData[0].forEach(cell => {
-                    html += `<th>${cell || ''}</th>`;
-                });
-                html += '</tr>';
+        
+        // 处理工作簿
+        function processWorkbook(data) {
+            try {
+                processedWorkbook = XLSX.read(data, { type: 'array' });
+                const worksheet = processedWorkbook.Sheets[processedWorkbook.SheetNames[0]];
+                jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 
-                // 数据行（最多显示10行）
-                for (let i = 1; i < Math.min(11, jsonData.length); i++) {
-                    html += '<tr>';
-                    jsonData[i].forEach(cell => {
-                        html += `<td>${cell || ''}</td>`;
-                    });
-                    html += '</tr>';
-                }
-                html += '</table>';
+                debugLog(`✅ 文件加载成功: ${currentFileName}`);
+                debugLog(`数据行数: ${jsonData.length}`);
                 
-                if (jsonData.length > 11) {
-                    html += `<p style="text-align: center; padding: 10px; color: #666;">... 还有 ${jsonData.length - 11} 行未显示</p>`;
-                }
+                showPreview(processedWorkbook);
+                document.getElementById('processBtn').disabled = false;
                 
-                document.getElementById('previewContainer').innerHTML = html;
+            } catch (error) {
+                debugLog('❌ 处理Excel文件时出错: ' + error.message);
+                updateStatus('❌ 处理Excel文件时出错');
             }
         }
-
-        // 处理文件 - 修复单元格写入问题
+        
+        // 显示预览
+        function showPreview(workbook) {
+            const previewDiv = document.getElementById('dataPreview');
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const html = XLSX.utils.sheet_to_html(worksheet);
+            previewDiv.innerHTML = html;
+        }
+        
+        // 处理文件
         function processFile() {
             if (!processedWorkbook) {
                 debugLog('❌ 请先选择Excel文件');
@@ -724,8 +572,7 @@
             
             const worksheet = processedWorkbook.Sheets[processedWorkbook.SheetNames[0]];
             
-            // 获取实际数据范围（更准确的方法）
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            // 获取实际数据范围
             const totalDataRows = jsonData.length;
             
             matchedRows = 0;
@@ -748,10 +595,14 @@
                 const community = findMatchingCommunity(cellValue);
                 
                 if (community) {
+                    // 直接更新数据数组
+                    if (!jsonData[row]) jsonData[row] = [];
+                    jsonData[row][resultColIndex] = community;
+                    
                     // 创建单元格地址
                     const cellAddress = XLSX.utils.encode_cell({c: resultColIndex, r: row});
                     
-                    // 创建或更新单元格
+                    // 更新工作表
                     worksheet[cellAddress] = {
                         t: 's', // 字符串类型
                         v: community
@@ -778,26 +629,29 @@
             updateProgress(100, `✅ 处理完成! 共处理 ${processed} 行，匹配 ${matchedRows} 条记录`);
             document.getElementById('downloadBtn').disabled = false;
             document.getElementById('matchedRows').textContent = matchedRows;
+            document.getElementById('processedRows').textContent = processed;
             
             debugLog(`✅ 处理完成! 共处理 ${processed} 行，匹配 ${matchedRows} 条记录`);
             
             // 更新预览
             showPreview(processedWorkbook);
         }
-
+        
         // 查找匹配的社区
-        function findMatchingCommunity(text) {
-            text = String(text || '').trim();
-            if (!text) return null;
+        function findMatchingCommunity(value) {
+            value = String(value || '').toLowerCase();
             
-            for (const keyword in keywordToCommunity) {
-                if (text.includes(keyword)) {
-                    return keywordToCommunity[keyword];
+            for (const [community, keywords] of Object.entries(communityRules)) {
+                for (const keyword of keywords) {
+                    if (value.includes(keyword.toLowerCase())) {
+                        return community;
+                    }
                 }
             }
+            
             return null;
         }
-
+        
         // 下载结果
         function downloadResult() {
             if (!processedWorkbook) {
@@ -806,21 +660,30 @@
             }
             
             try {
+                // 确保使用最新的jsonData更新工作表
+                const worksheet = processedWorkbook.Sheets[processedWorkbook.SheetNames[0]];
+                const newWorksheet = XLSX.utils.aoa_to_sheet(jsonData);
+                
+                // 合并属性（保留格式等）
+                Object.assign(worksheet, newWorksheet);
+                
                 const wbout = XLSX.write(processedWorkbook, { bookType: 'xlsx', type: 'array' });
                 const blob = new Blob([wbout], { type: 'application/octet-stream' });
                 
                 const baseName = currentFileName.replace(/\.(xlsx|xls)$/i, '');
                 const saveName = `${baseName}_社区标注_${new Date().getTime()}.xlsx`;
                 
-                // 创建下载链接
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = saveName;
                 document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
                 
                 updateStatus(`✅ 文件已下载: ${saveName}`);
                 debugLog(`✅ 文件已下载: ${saveName}`);
@@ -828,18 +691,26 @@
                 debugLog('❌ 文件保存失败: ' + error.message);
             }
         }
-
-        // 更新状态
-        function updateStatus(message) {
-            document.getElementById('status').textContent = message;
-        }
-
+        
         // 更新进度
         function updateProgress(percent, message) {
             const progressBar = document.getElementById('progressBar');
             progressBar.style.width = percent + '%';
             progressBar.textContent = percent + '%';
             updateStatus(message);
+        }
+        
+        // 更新状态
+        function updateStatus(message) {
+            document.getElementById('statusMessage').textContent = message;
+        }
+        
+        // 调试日志
+        function debugLog(message) {
+            const console = document.getElementById('debugConsole');
+            const timestamp = new Date().toLocaleTimeString();
+            console.innerHTML += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
         }
     </script>
 </body>
