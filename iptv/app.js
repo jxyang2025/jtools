@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================
     // !!! 关键配置: Cloudflare Worker 代理地址 !!!
     // ==========================================================
-    // 确保 Worker 代理已部署并运行，它是解决 CORS 和混合内容问题的关键。
+    // 确保这里是您的 Worker 的 HTTPS 地址，末尾包含斜杠 "/"。
+    // 它用于解决 CORS 和混合内容问题。
     const WORKER_PROXY_BASE_URL = 'https://m3u-proxy.jxy5460.workers.dev/'; 
 
     /**
@@ -37,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let fetchUrl = url;
         
         if (WORKER_PROXY_BASE_URL) {
-            // 将原始 M3U URL 作为参数传递给 Worker
+            // ⭐ 1. 关键：对 M3U 订阅链接使用 Worker 代理
             fetchUrl = WORKER_PROXY_BASE_URL + '?url=' + encodeURIComponent(url);
         }
 
@@ -46,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(fetchUrl);
             
             if (!response.ok) {
-                // 如果 Worker 返回非 200 状态码，显示错误信息
                 const errorText = await response.text();
                 throw new Error(`网络请求失败，状态码: ${response.status}。Worker 错误信息: ${errorText.substring(0, 100)}`);
             }
@@ -145,9 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
             player.hls = null;
         }
         
-        // ⭐ 关键修改：对视频流 URL 也应用 Worker 代理，解决混合内容和 CORS 问题
         let proxiedUrl = url;
+        
         if (WORKER_PROXY_BASE_URL) {
+            // ⭐ 2. 关键：对 HLS 视频流 URL 使用 Worker 代理
+            // 解决混合内容和 CORS 问题，并确保 Worker 接收到正确的 '?url=' 参数
             proxiedUrl = WORKER_PROXY_BASE_URL + '?url=' + encodeURIComponent(url);
         }
         
@@ -166,7 +168,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             hls.on(Hls.Events.ERROR, function(event, data) {
                 if (data.fatal) {
-                    updateStatus(`播放错误 (${name}): 无法加载流或片段。请检查流地址是否有效。`, 'error');
+                    // 检查是否是由于Worker返回400导致的
+                    const is400Error = data.networkDetails && data.networkDetails.status === 400;
+                    
+                    if (is400Error) {
+                         updateStatus(`播放错误 (${name}): Worker返回400。可能是流URL格式有误。`, 'error');
+                    } else {
+                         updateStatus(`播放错误 (${name}): 无法加载流或片段。请检查流地址是否有效。`, 'error');
+                    }
                     console.error('HLS Fatal Error:', data);
                 }
             });
@@ -203,7 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (channels.length > 0) {
                 // 默认播放第一个频道
-                document.querySelector('#channels li a').click();
+                // 使用 setTimeout 确保 DOM 渲染完成
+                setTimeout(() => {
+                    document.querySelector('#channels li a')?.click();
+                }, 50); 
             } else {
                  updateStatus('M3U 文件已加载，但未找到任何频道。', 'error');
             }
