@@ -11,10 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================
     // !!! 关键配置: Cloudflare Worker 代理地址 !!!
     // ==========================================================
-    // 由于跨域问题，M3U 文件通常需要通过代理获取。
-    // 请将 YOUR_WORKER_DOMAIN_HERE.workers.dev 替换成您部署的 Cloudflare Worker 域名。
-    // Worker 的作用是获取 M3U 文件内容并添加 CORS 头部。
-    // 如果您的 M3U 源本身支持 CORS (极少数情况)，可以将此变量设为 null 或空字符串。
+    // 确保 Worker 代理已部署并运行，它是解决 CORS 和混合内容问题的关键。
     const WORKER_PROXY_BASE_URL = 'https://m3u-proxy.jxy5460.workers.dev/'; 
 
     /**
@@ -49,7 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(fetchUrl);
             
             if (!response.ok) {
-                throw new Error(`网络请求失败，状态码: ${response.status}`);
+                // 如果 Worker 返回非 200 状态码，显示错误信息
+                const errorText = await response.text();
+                throw new Error(`网络请求失败，状态码: ${response.status}。Worker 错误信息: ${errorText.substring(0, 100)}`);
             }
             
             const text = await response.text();
@@ -146,27 +145,36 @@ document.addEventListener('DOMContentLoaded', () => {
             player.hls = null;
         }
         
+        // ⭐ 关键修改：对视频流 URL 也应用 Worker 代理，解决混合内容和 CORS 问题
+        let proxiedUrl = url;
+        if (WORKER_PROXY_BASE_URL) {
+            proxiedUrl = WORKER_PROXY_BASE_URL + '?url=' + encodeURIComponent(url);
+        }
+        
         // 尝试使用 hls.js (推荐用于跨浏览器兼容性)
         if (Hls.isSupported()) {
             const hls = new Hls();
             player.hls = hls; // 存储实例以便后续清理
             
-            hls.loadSource(url);
+            // 使用代理后的 HTTPS URL 加载流
+            hls.loadSource(proxiedUrl);
             hls.attachMedia(videoElement);
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                // 尝试播放。如果被浏览器阻止自动播放，则捕获错误。
                 player.play().catch(e => console.log("Player autplay blocked:", e));
                 updateStatus(`频道播放中: ${name}`, 'success');
             });
             hls.on(Hls.Events.ERROR, function(event, data) {
                 if (data.fatal) {
-                    updateStatus(`播放错误 (${name}): 无法加载流。`, 'error');
+                    updateStatus(`播放错误 (${name}): 无法加载流或片段。请检查流地址是否有效。`, 'error');
                     console.error('HLS Fatal Error:', data);
                 }
             });
         } 
         // 苹果等原生支持 HLS 的设备
         else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-            videoElement.src = url;
+            // 原生 HLS 播放也必须使用代理后的 URL
+            videoElement.src = proxiedUrl;
             player.load();
             player.play().catch(e => console.log("Player autplay blocked:", e));
             updateStatus(`频道播放中: ${name}`, 'success');
