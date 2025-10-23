@@ -1,0 +1,100 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+header {
+    background: #333;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+#url-input-area {
+    margin-top: 15px;
+}
+
+#iptv-url {
+    padding: 10px;
+    width: 60%;
+    max-width: 400px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 4px;
+}
+
+#load-playlist {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#load-playlist:hover {
+    background-color: #0056b3;
+}
+
+#app-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 20px auto;
+    background: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#channel-list {
+    width: 300px;
+    border-right: 1px solid #ddd;
+    padding: 15px;
+    overflow-y: auto;
+    max-height: calc(100vh - 100px); /* 限制高度，使其可滚动 */
+}
+
+#channel-list h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+#channels {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#channels li a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    border-bottom: 1px dashed #eee;
+    transition: background-color 0.2s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#channels li a:hover, #channels li a.active {
+    background-color: #e9e9e9;
+    font-weight: bold;
+}
+
+#player-container {
+    flex-grow: 1;
+    padding: 15px;
+}
+
+/* 确保播放器响应式 */
+.video-js {
+    width: 100% !important;
+    height: auto !important;
+}
+
+#status-message {
+    color: yellow;
+    margin-left: 20px;
+}
