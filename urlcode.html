@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL编码解码工具 - 网页版</title>
+    <title>URL编码/解码工具 - 支持多重解码</title>
     <style>
         * {
             box-sizing: border-box;
@@ -182,6 +182,7 @@
             justify-content: center;
             gap: 15px;
             margin: 20px 0;
+            flex-wrap: wrap;
         }
         
         .options-group {
@@ -196,7 +197,6 @@
             padding: 15px;
             border-radius: 8px;
             border: 2px solid #e9ecef;
-            text-align: center;
         }
         
         .option-title {
@@ -208,6 +208,7 @@
         .option-description {
             font-size: 0.9em;
             color: #6c757d;
+            margin-bottom: 10px;
         }
         
         .stats {
@@ -294,6 +295,38 @@
             gap: 15px;
         }
         
+        .decode-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .decode-level {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        
+        .level-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6c757d;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .level-active {
+            background: #28a745;
+        }
+        
         @media (max-width: 768px) {
             .grid-2 {
                 grid-template-columns: 1fr;
@@ -317,7 +350,7 @@
     <div class="container">
         <div class="header">
             <h1>🔗 URL编码/解码工具</h1>
-            <p>快速进行URL编码和解码操作 - 网页版</p>
+            <p>支持多重URL编码和解码操作 - 网页版</p>
         </div>
 
         <div class="content">
@@ -327,12 +360,13 @@
                 
                 <div class="form-group">
                     <label>输入文本或URL:</label>
-                    <textarea class="text-area" id="inputText" placeholder="请输入需要编码或解码的内容..."></textarea>
+                    <textarea class="text-area" id="inputText" placeholder="请输入需要编码或解码的内容...">https://m3u-proxy.jxy5460.workers.dev/?url=https%3A%2F%2Fm3u-proxy.jxy5460.workers.dev%2F%3Furl%3Dhttp%253A%252F%252F120.76.248.139%252Flive%252Fbfgd%252F4200000484.m3u8</textarea>
                 </div>
                 
                 <div class="action-buttons">
                     <button class="btn btn-primary" onclick="encodeURL()">🔒 URL编码</button>
-                    <button class="btn btn-success" onclick="decodeURL()">🔓 URL解码</button>
+                    <button class="btn btn-success" onclick="decodeURL()">🔓 URL解码(单次)</button>
+                    <button class="btn btn-warning" onclick="decodeMultiLevel()">🔄 多重解码</button>
                     <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空</button>
                 </div>
             </div>
@@ -349,6 +383,12 @@
                 <div class="action-buttons">
                     <button class="btn btn-warning" onclick="copyToClipboard()">📋 复制结果</button>
                 </div>
+            </div>
+
+            <!-- 解码信息 -->
+            <div class="section decode-info" id="decodeInfo" style="display: none;">
+                <h2 class="section-title">🔍 解码信息</h2>
+                <div id="decodeLevels"></div>
             </div>
 
             <!-- 统计信息 -->
@@ -444,6 +484,7 @@
             }
             
             document.getElementById('outputText').value = encoded;
+            document.getElementById('decodeInfo').style.display = 'none';
             
             // 添加到历史记录
             addToHistory(inputText, encoded, 'encode');
@@ -452,7 +493,7 @@
             updateCharCount();
         }
         
-        // URL解码
+        // URL解码（单次）
         function decodeURL() {
             const inputText = document.getElementById('inputText').value;
             if (!inputText) {
@@ -468,6 +509,7 @@
                 const decoded = decodeURIComponent(processedText);
                 
                 document.getElementById('outputText').value = decoded;
+                document.getElementById('decodeInfo').style.display = 'none';
                 
                 // 添加到历史记录
                 addToHistory(inputText, decoded, 'decode');
@@ -477,6 +519,90 @@
             } catch (e) {
                 alert('解码失败：输入的内容不是有效的URL编码格式');
                 console.error('解码错误:', e);
+            }
+        }
+        
+        // 多重解码（直到无法再解码）
+        function decodeMultiLevel() {
+            const inputText = document.getElementById('inputText').value;
+            if (!inputText) {
+                alert('请输入需要解码的内容');
+                return;
+            }
+            
+            try {
+                let currentText = inputText;
+                let decodeLevels = [];
+                let level = 1;
+                let hasEncodedContent = true;
+                
+                // 显示解码信息区域
+                const decodeInfo = document.getElementById('decodeInfo');
+                const decodeLevelsContainer = document.getElementById('decodeLevels');
+                decodeInfo.style.display = 'block';
+                decodeLevelsContainer.innerHTML = '';
+                
+                // 持续解码直到没有编码内容
+                while (hasEncodedContent && level <= 10) { // 限制最多10层防止无限循环
+                    let processedText = currentText.replace(/\+/g, '%20');
+                    
+                    // 检查是否还有编码内容
+                    if (!/%[0-9A-Fa-f]{2}/.test(processedText)) {
+                        hasEncodedContent = false;
+                        break;
+                    }
+                    
+                    try {
+                        const decoded = decodeURIComponent(processedText);
+                        
+                        // 记录解码层级
+                        decodeLevels.push({
+                            level: level,
+                            text: decoded
+                        });
+                        
+                        // 如果解码后没有变化，停止循环
+                        if (decoded === currentText) {
+                            hasEncodedContent = false;
+                        } else {
+                            currentText = decoded;
+                            level++;
+                        }
+                    } catch (e) {
+                        // 解码失败，停止循环
+                        hasEncodedContent = false;
+                    }
+                }
+                
+                // 显示最终结果
+                document.getElementById('outputText').value = currentText;
+                
+                // 显示解码层级信息
+                if (decodeLevels.length > 0) {
+                    let html = '<div class="option-title">解码层级:</div>';
+                    
+                    decodeLevels.forEach((item, index) => {
+                        const isLast = index === decodeLevels.length - 1;
+                        html += `
+                            <div class="decode-level">
+                                <div class="level-indicator ${isLast ? 'level-active' : ''}">${item.level}</div>
+                                <div class="history-content">${item.text}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    decodeLevelsContainer.innerHTML = html;
+                }
+                
+                // 添加到历史记录
+                addToHistory(inputText, currentText, 'multidecode');
+                
+                // 更新计数
+                updateCharCount();
+                
+            } catch (e) {
+                alert('多重解码过程中发生错误');
+                console.error('多重解码错误:', e);
             }
         }
         
@@ -515,12 +641,21 @@
             
             let html = '';
             historyItems.forEach((item, index) => {
+                let typeClass = 'type-encode';
+                let typeText = '编码';
+                
+                if (item.type === 'decode') {
+                    typeClass = 'type-decode';
+                    typeText = '解码';
+                } else if (item.type === 'multidecode') {
+                    typeClass = 'type-decode';
+                    typeText = '多重';
+                }
+                
                 html += `
                     <div class="history-item" onclick="loadHistoryItem(${index})">
                         <div>
-                            <span class="history-type ${item.type === 'encode' ? 'type-encode' : 'type-decode'}">
-                                ${item.type === 'encode' ? '编码' : '解码'}
-                            </span>
+                            <span class="history-type ${typeClass}">${typeText}</span>
                             <span>${item.timestamp}</span>
                         </div>
                         <div class="history-content">${item.input}</div>
@@ -538,6 +673,7 @@
                 const item = historyItems[index];
                 document.getElementById('inputText').value = item.input;
                 document.getElementById('outputText').value = item.output;
+                document.getElementById('decodeInfo').style.display = 'none';
                 updateCharCount();
             }
         }
@@ -561,6 +697,7 @@
         function clearAll() {
             document.getElementById('inputText').value = '';
             document.getElementById('outputText').value = '';
+            document.getElementById('decodeInfo').style.display = 'none';
             updateCharCount();
         }
         
@@ -592,6 +729,11 @@
             
             // 初始更新计数
             updateCharCount();
+            
+            // 自动解码示例URL
+            setTimeout(() => {
+                decodeMultiLevel();
+            }, 500);
         });
     </script>
 </body>
