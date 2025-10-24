@@ -21,7 +21,7 @@
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -158,23 +158,33 @@
         
         .text-area {
             width: 100%;
-            height: 150px;
+            min-height: 150px;
+            max-height: 300px;
             border: 2px solid #ddd;
             border-radius: 8px;
             padding: 12px;
             font-family: 'Microsoft YaHei', monospace;
             resize: vertical;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-y: auto;
         }
         
         .result-area {
             width: 100%;
-            height: 150px;
+            min-height: 150px;
+            max-height: 300px;
             border: 2px solid #3498db;
             border-radius: 8px;
             padding: 12px;
             background: #e3f2fd;
             font-family: 'Microsoft YaHei', monospace;
             resize: vertical;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-y: auto;
         }
         
         .action-buttons {
@@ -265,9 +275,9 @@
         .history-content {
             font-size: 0.9em;
             font-family: monospace;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            white-space: pre-wrap;
         }
         
         .history-type {
@@ -305,7 +315,7 @@
         
         .decode-level {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             margin: 5px 0;
         }
         
@@ -321,10 +331,37 @@
             color: white;
             font-size: 12px;
             font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 3px;
         }
         
         .level-active {
             background: #28a745;
+        }
+        
+        .level-content {
+            flex: 1;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        
+        .url-parts {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .url-part {
+            margin: 5px 0;
+            padding: 3px 5px;
+            background: #e9ecef;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
         }
         
         @media (max-width: 768px) {
@@ -343,6 +380,11 @@
             .action-buttons {
                 flex-direction: column;
             }
+            
+            .text-area, .result-area {
+                min-height: 120px;
+                max-height: 250px;
+            }
         }
     </style>
 </head>
@@ -360,7 +402,7 @@
                 
                 <div class="form-group">
                     <label>输入文本或URL:</label>
-                    <textarea class="text-area" id="inputText" placeholder="请输入需要编码或解码的内容...">https://m3u-proxy.jxy5460.workers.dev/?url=https%3A%2F%2Fm3u-proxy.jxy5460.workers.dev%2F%3Furl%3Dhttp%253A%252F%252F120.76.248.139%252Flive%252Fbfgd%252F4200000484.m3u8</textarea>
+                    <textarea class="text-area" id="inputText" placeholder="请输入需要编码或解码的内容..." oninput="updateCharCount()">https://m3u-proxy.jxy5460.workers.dev/?url=https%3A%2F%2Fm3u-proxy.jxy5460.workers.dev%2F%3Furl%3Dhttp%253A%252F%252F120.76.248.139%252Flive%252Fbfgd%252F4200000484.m3u8</textarea>
                 </div>
                 
                 <div class="action-buttons">
@@ -382,6 +424,7 @@
                 
                 <div class="action-buttons">
                     <button class="btn btn-warning" onclick="copyToClipboard()">📋 复制结果</button>
+                    <button class="btn btn-primary" onclick="analyzeURL()">🔍 分析URL结构</button>
                 </div>
             </div>
 
@@ -389,6 +432,12 @@
             <div class="section decode-info" id="decodeInfo" style="display: none;">
                 <h2 class="section-title">🔍 解码信息</h2>
                 <div id="decodeLevels"></div>
+            </div>
+
+            <!-- URL分析结果 -->
+            <div class="section decode-info" id="urlAnalysis" style="display: none;">
+                <h2 class="section-title">🔗 URL结构分析</h2>
+                <div id="urlParts"></div>
             </div>
 
             <!-- 统计信息 -->
@@ -454,6 +503,16 @@
             
             document.getElementById('inputCount').textContent = inputText.length;
             document.getElementById('outputCount').textContent = outputText.length;
+            
+            // 自动调整文本框高度
+            autoResizeTextarea(document.getElementById('inputText'));
+            autoResizeTextarea(document.getElementById('outputText'));
+        }
+        
+        // 自动调整文本框高度
+        function autoResizeTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
         }
         
         // URL编码
@@ -485,6 +544,7 @@
             
             document.getElementById('outputText').value = encoded;
             document.getElementById('decodeInfo').style.display = 'none';
+            document.getElementById('urlAnalysis').style.display = 'none';
             
             // 添加到历史记录
             addToHistory(inputText, encoded, 'encode');
@@ -510,6 +570,7 @@
                 
                 document.getElementById('outputText').value = decoded;
                 document.getElementById('decodeInfo').style.display = 'none';
+                document.getElementById('urlAnalysis').style.display = 'none';
                 
                 // 添加到历史记录
                 addToHistory(inputText, decoded, 'decode');
@@ -586,7 +647,7 @@
                         html += `
                             <div class="decode-level">
                                 <div class="level-indicator ${isLast ? 'level-active' : ''}">${item.level}</div>
-                                <div class="history-content">${item.text}</div>
+                                <div class="level-content">${item.text}</div>
                             </div>
                         `;
                     });
@@ -603,6 +664,65 @@
             } catch (e) {
                 alert('多重解码过程中发生错误');
                 console.error('多重解码错误:', e);
+            }
+        }
+        
+        // 分析URL结构
+        function analyzeURL() {
+            const inputText = document.getElementById('inputText').value;
+            if (!inputText) {
+                alert('请输入需要分析的URL');
+                return;
+            }
+            
+            try {
+                const urlAnalysis = document.getElementById('urlAnalysis');
+                const urlPartsContainer = document.getElementById('urlParts');
+                urlAnalysis.style.display = 'block';
+                
+                let html = '';
+                
+                // 尝试解析URL
+                try {
+                    const url = new URL(inputText);
+                    
+                    html += `
+                        <div class="url-parts">
+                            <div class="url-part"><strong>协议:</strong> ${url.protocol}</div>
+                            <div class="url-part"><strong>主机名:</strong> ${url.hostname}</div>
+                            <div class="url-part"><strong>端口:</strong> ${url.port || '默认'}</div>
+                            <div class="url-part"><strong>路径:</strong> ${url.pathname}</div>
+                        </div>
+                    `;
+                    
+                    // 解析查询参数
+                    if (url.search) {
+                        html += '<div class="url-parts"><strong>查询参数:</strong>';
+                        url.searchParams.forEach((value, key) => {
+                            html += `<div class="url-part">${key} = ${value}</div>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    // 解析哈希值
+                    if (url.hash) {
+                        html += `<div class="url-parts"><strong>哈希值:</strong> ${url.hash}</div>`;
+                    }
+                } catch (e) {
+                    html += '<div class="url-parts">无法解析为完整URL，可能是编码的URL字符串</div>';
+                }
+                
+                // 检查编码部分
+                const encodedParts = inputText.match(/%[0-9A-Fa-f]{2}/g);
+                if (encodedParts && encodedParts.length > 0) {
+                    html += `<div class="url-parts"><strong>编码部分:</strong> 发现 ${encodedParts.length} 处编码内容</div>`;
+                }
+                
+                urlPartsContainer.innerHTML = html;
+                
+            } catch (e) {
+                alert('URL分析过程中发生错误');
+                console.error('URL分析错误:', e);
             }
         }
         
@@ -652,14 +772,18 @@
                     typeText = '多重';
                 }
                 
+                // 截断过长的文本
+                const shortInput = item.input.length > 50 ? item.input.substring(0, 50) + '...' : item.input;
+                const shortOutput = item.output.length > 50 ? item.output.substring(0, 50) + '...' : item.output;
+                
                 html += `
                     <div class="history-item" onclick="loadHistoryItem(${index})">
                         <div>
                             <span class="history-type ${typeClass}">${typeText}</span>
                             <span>${item.timestamp}</span>
                         </div>
-                        <div class="history-content">${item.input}</div>
-                        <div class="history-content">→ ${item.output}</div>
+                        <div class="history-content"><strong>输入:</strong> ${shortInput}</div>
+                        <div class="history-content"><strong>输出:</strong> ${shortOutput}</div>
                     </div>
                 `;
             });
@@ -674,6 +798,7 @@
                 document.getElementById('inputText').value = item.input;
                 document.getElementById('outputText').value = item.output;
                 document.getElementById('decodeInfo').style.display = 'none';
+                document.getElementById('urlAnalysis').style.display = 'none';
                 updateCharCount();
             }
         }
@@ -698,6 +823,7 @@
             document.getElementById('inputText').value = '';
             document.getElementById('outputText').value = '';
             document.getElementById('decodeInfo').style.display = 'none';
+            document.getElementById('urlAnalysis').style.display = 'none';
             updateCharCount();
         }
         
