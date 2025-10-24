@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL编码解码工具 - 网页版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 5px solid #3498db;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e9ecef;
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+            font-weight: bold;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            font-family: 'Microsoft YaHei', monospace;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .text-area {
+            width: 100%;
+            height: 150px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Microsoft YaHei', monospace;
+            resize: vertical;
+        }
+        
+        .result-area {
+            width: 100%;
+            height: 150px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 12px;
+            background: #e3f2fd;
+            font-family: 'Microsoft YaHei', monospace;
+            resize: vertical;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .options-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .option-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .option-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .option-description {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .history {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+            margin-bottom: 15px;
+        }
+        
+        .history-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .history-item:hover {
+            border-color: #3498db;
+            transform: translateX(5px);
+        }
+        
+        .history-content {
+            font-size: 0.9em;
+            font-family: monospace;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .history-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .type-encode {
+            background: #3498db;
+            color: white;
+        }
+        
+        .type-decode {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .options-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 URL编码/解码工具</h1>
+            <p>快速进行URL编码和解码操作 - 网页版</p>
+        </div>
+
+        <div class="content">
+            <!-- 输入区域 -->
+            <div class="section">
+                <h2 class="section-title">📥 输入区域</h2>
+                
+                <div class="form-group">
+                    <label>输入文本或URL:</label>
+                    <textarea class="text-area" id="inputText" placeholder="请输入需要编码或解码的内容..."></textarea>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="encodeURL()">🔒 URL编码</button>
+                    <button class="btn btn-success" onclick="decodeURL()">🔓 URL解码</button>
+                    <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空</button>
+                </div>
+            </div>
+
+            <!-- 输出区域 -->
+            <div class="section">
+                <h2 class="section-title">📤 输出结果</h2>
+                
+                <div class="form-group">
+                    <label>处理结果:</label>
+                    <textarea class="result-area" id="outputText" readonly placeholder="处理结果将显示在这里..."></textarea>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-warning" onclick="copyToClipboard()">📋 复制结果</button>
+                </div>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">输入字符数</div>
+                    <div class="stat-number" id="inputCount">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">输出字符数</div>
+                    <div class="stat-number" id="outputCount">0</div>
+                </div>
+            </div>
+
+            <!-- 选项设置 -->
+            <div class="section">
+                <h2 class="section-title">⚙️ 编码选项</h2>
+                
+                <div class="options-group">
+                    <div class="option-item">
+                        <div class="option-title">编码空格为加号</div>
+                        <div class="option-description">将空格编码为+而不是%20</div>
+                        <div style="margin-top: 10px;">
+                            <input type="checkbox" id="spaceAsPlus" checked>
+                            <label for="spaceAsPlus">启用</label>
+                        </div>
+                    </div>
+                    
+                    <div class="option-item">
+                        <div class="option-title">编码所有字符</div>
+                        <div class="option-description">编码所有字符，不仅仅是特殊字符</div>
+                        <div style="margin-top: 10px;">
+                            <input type="checkbox" id="encodeAll">
+                            <label for="encodeAll">启用</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 历史记录 -->
+            <div class="section">
+                <h2 class="section-title">🕒 历史记录</h2>
+                
+                <div class="history" id="historyContainer">
+                    <p style="text-align: center; padding: 20px; color: #666;">历史记录将显示在这里...</p>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-warning" onclick="clearHistory()">清除历史</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 历史记录数组
+        let historyItems = [];
+        
+        // 更新字符计数
+        function updateCharCount() {
+            const inputText = document.getElementById('inputText').value;
+            const outputText = document.getElementById('outputText').value;
+            
+            document.getElementById('inputCount').textContent = inputText.length;
+            document.getElementById('outputCount').textContent = outputText.length;
+        }
+        
+        // URL编码
+        function encodeURL() {
+            const inputText = document.getElementById('inputText').value;
+            if (!inputText) {
+                alert('请输入需要编码的内容');
+                return;
+            }
+            
+            const spaceAsPlus = document.getElementById('spaceAsPlus').checked;
+            const encodeAll = document.getElementById('encodeAll').checked;
+            
+            let encoded;
+            if (encodeAll) {
+                // 编码所有字符
+                encoded = Array.from(inputText).map(char => {
+                    return '%' + char.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0');
+                }).join('');
+            } else {
+                // 标准URL编码
+                encoded = encodeURIComponent(inputText);
+                
+                // 处理空格选项
+                if (spaceAsPlus) {
+                    encoded = encoded.replace(/%20/g, '+');
+                }
+            }
+            
+            document.getElementById('outputText').value = encoded;
+            
+            // 添加到历史记录
+            addToHistory(inputText, encoded, 'encode');
+            
+            // 更新计数
+            updateCharCount();
+        }
+        
+        // URL解码
+        function decodeURL() {
+            const inputText = document.getElementById('inputText').value;
+            if (!inputText) {
+                alert('请输入需要解码的内容');
+                return;
+            }
+            
+            try {
+                // 处理加号编码的空格
+                let processedText = inputText.replace(/\+/g, '%20');
+                
+                // 解码
+                const decoded = decodeURIComponent(processedText);
+                
+                document.getElementById('outputText').value = decoded;
+                
+                // 添加到历史记录
+                addToHistory(inputText, decoded, 'decode');
+                
+                // 更新计数
+                updateCharCount();
+            } catch (e) {
+                alert('解码失败：输入的内容不是有效的URL编码格式');
+                console.error('解码错误:', e);
+            }
+        }
+        
+        // 添加到历史记录
+        function addToHistory(input, output, type) {
+            const timestamp = new Date().toLocaleTimeString();
+            const historyItem = {
+                input,
+                output,
+                type,
+                timestamp
+            };
+            
+            historyItems.unshift(historyItem); // 添加到开头
+            
+            // 限制历史记录数量
+            if (historyItems.length > 10) {
+                historyItems = historyItems.slice(0, 10);
+            }
+            
+            // 更新历史记录显示
+            updateHistoryDisplay();
+            
+            // 保存到本地存储
+            localStorage.setItem('urlEncoderHistory', JSON.stringify(historyItems));
+        }
+        
+        // 更新历史记录显示
+        function updateHistoryDisplay() {
+            const historyContainer = document.getElementById('historyContainer');
+            
+            if (historyItems.length === 0) {
+                historyContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">历史记录将显示在这里...</p>';
+                return;
+            }
+            
+            let html = '';
+            historyItems.forEach((item, index) => {
+                html += `
+                    <div class="history-item" onclick="loadHistoryItem(${index})">
+                        <div>
+                            <span class="history-type ${item.type === 'encode' ? 'type-encode' : 'type-decode'}">
+                                ${item.type === 'encode' ? '编码' : '解码'}
+                            </span>
+                            <span>${item.timestamp}</span>
+                        </div>
+                        <div class="history-content">${item.input}</div>
+                        <div class="history-content">→ ${item.output}</div>
+                    </div>
+                `;
+            });
+            
+            historyContainer.innerHTML = html;
+        }
+        
+        // 加载历史记录项
+        function loadHistoryItem(index) {
+            if (index >= 0 && index < historyItems.length) {
+                const item = historyItems[index];
+                document.getElementById('inputText').value = item.input;
+                document.getElementById('outputText').value = item.output;
+                updateCharCount();
+            }
+        }
+        
+        // 复制到剪贴板
+        function copyToClipboard() {
+            const outputText = document.getElementById('outputText');
+            
+            if (!outputText.value) {
+                alert('没有内容可复制');
+                return;
+            }
+            
+            outputText.select();
+            document.execCommand('copy');
+            
+            alert('已复制到剪贴板！');
+        }
+        
+        // 清空所有
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').value = '';
+            updateCharCount();
+        }
+        
+        // 清除历史记录
+        function clearHistory() {
+            if (confirm('确定要清除所有历史记录吗？')) {
+                historyItems = [];
+                localStorage.removeItem('urlEncoderHistory');
+                updateHistoryDisplay();
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从本地存储加载历史记录
+            const savedHistory = localStorage.getItem('urlEncoderHistory');
+            if (savedHistory) {
+                try {
+                    historyItems = JSON.parse(savedHistory);
+                    updateHistoryDisplay();
+                } catch (e) {
+                    console.error('加载历史记录失败:', e);
+                }
+            }
+            
+            // 添加输入事件监听器
+            document.getElementById('inputText').addEventListener('input', updateCharCount);
+            document.getElementById('outputText').addEventListener('input', updateCharCount);
+            
+            // 初始更新计数
+            updateCharCount();
+        });
+    </script>
+</body>
+</html>
