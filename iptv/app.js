@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================
     // 确保这里是您的 Worker 的 HTTPS 地址，末尾包含斜杠 "/"。
     // 它用于解决 CORS 和混合内容问题。
-    const WORKER_PROXY_BASE_URL = 'https://m3u-proxy.jxy5460.workers.dev/'; 
+    const WORKER_PROXY_BASE_URL = 'https://m3u.521986.xyz/'; 
 
     /**
      * 更新状态信息
@@ -232,3 +232,4 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('iptvUrl', iptvUrlInput.value.trim());
     });
 });
+
