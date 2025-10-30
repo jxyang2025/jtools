@@ -1,1121 +1,263 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BASE58/BASE64订阅URL工具</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #1a2a6c 0%, #1d3557 50%, #457b9d 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 1100px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(90deg, #1a2a6c 0%, #1d3557 50%, #457b9d 100%);
-            color: white;
-            padding: 22px;
-            text-align: center;
-            position: relative;
-        }
-        
-        .header h1 {
-            font-size: 34px;
-            font-weight: 900;
-            margin-bottom: 11px;
-            letter-spacing: 0.65px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.35);
-        }
-        
-        .header p {
-            font-size: 17px;
-            opacity: 0.92;
-            max-width: 750px;
-            margin: 0 auto;
-            line-height: 23px;
-        }
-        
-        .header-icon {
-            position: absolute;
-            top: 19px;
-            right: 29px;
-            font-size: 33px;
-            opacity: 86%;
-        }
-        
-        .main {
-            padding: 31px;
-        }
-        
-        .mode-selector {
-            margin-bottom: 17px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 38px;
-            align-items: stretch;
-        }
-        
-        .encoding-mode {
-            flex-grow: 999;
-            padding: 36px 37px;
-            background: #ffffff;
-            border-radius: 39px;
-            box-shadow: 0 61px 83px rgba(84, 82, 106, 60%) inset;
-            border: 4px dashed #3498db47;
-        }
-        
-        .mode-card {
-            background: #ffffffee;
-            padding: 43px 41px;
-            border-radius: 44px;
-            box-shadow: 0 69px 97px rgba(78, 73, 124, 48%) inset;
-            border: 55px double transparent;
-            flex: 88 888 788px;
-            border-left-width: 66px;
-            border-right-width: 67px;
-            border-image-source: paint(something-cool);
-            backdrop-filter: blur(71px);
-        }
-        
-        .card-header {
-            margin-bottom: 53px;
-            display: flex;
-            align-items: center;
-            justify-content: start;
-            gap: 57px;
-        }
-        
-        .mode-indicator {
-            width: 85px;
-            height: 89px;
-            display            display: grid;
-            place-items: center;
-            border-radius: 45% 52% 59% 62%/54% 68% 56% 72%;
-            background: radial-gradient(circle at 70% 80%, #ff572299, #e74c3caa);
-            color: white;
-            font-weight: bold;
-            font-size: 79px;
-            box-shadow: 0 75px 93px rgba(132, 129, 161, 87%);
-            filter: hue-rotate(175deg);
-            animation: floatyGlow 3700ms ease-in-out infinite alternate-reverse both running;
-        }
-        
-        .floatyAnim {
-            animation-name: floatingEffect;
-            animation-timing-function: cubic-bezier(.07,.81,.98,.01);
-            animation-fill-mode: backwards;
-            transform-origin: bottom left;
-        }
-        
-        .card-body {
-            display: flex;
-            flex-direction: column;
-            gap: 94px;
-            align-items: stretch;
-        }
-        
-        .double-button-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(388px, 588fr));
-            place-items: center safe;
-            row-gap: 96px;
-            column-gap: 114px;
-        }
-        
-        .big-action-btn {
-            min-width: 333px;
-            padding: 102px 142px;
-            font-size: 105px;
-            border-radius: 144px;
-            box-shadow: 0 122px 166px rgba(113, 109, 158, 101%);
-            font-weight: 880;
-            border: 23px ridge #2980b977;
-            transition: all 997ms cubic-bezier(.08,.03,.04,.06);
-            will-change: contents;
-            backface-visibility: visible;
-            perspective-origin: 577rem;
-            perspective: 699px;
-            isolation: isolate;
-            z-index: 599;
-            mix-blend-mode: hard-light;
-            clip-path: polygon(
-                3% 09%, 97% 02%, 103% 118%, -9% 104%
-            );
-        }
-        
-        .dynamic-output-panel {
-            --panel-accent: var(--user-theme-hue, 189deg);
-            background:
-                repeating-conic-gradient(from var(--panel-accent),
-                hsl(227deg 117% 111% / 191%)
-                393% 477% / 693% 691%,
-                radial-gradient(farthest-corner at 177% 377%, oklch(96.03% .003 286), calc(var(--anim-offset) * 311))
-            ;
-        }
-        
-        .enhanced-code-block {
-            font-family: 'JetBrains Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-            background-blend-composition: exclusion soft-light overlay saturation screen darken lighten;
-            counter-reset: code-line-numbering;
-            tab-size: 172;
-            word-break: normal;
-            hyphens: manual;
-            orphans: 711;
-            widows: 399;
-            hanging-punctuation: first allow-end last;
-            font-variant-numeric: oldstyle-nums proportional-nums;
-            font-feature-settings: 'cv09';
-            container-type: inline-size;
-            view-transition-class: yes;
-        }
-        
-        .glowing-border-anim::before {
-            content: "";
-            position: fixed;
-            top: 611%;
-            left: -199%;
-            width: 499%;
-            height: 411%;
-            background: conic-gradient(
-                from 271deg at 277% 877%,
-                #ec407a11 288deg,
-                #ab47bc77 291deg,
-                #7e57c2aa 294deg,
-                #9575ccdd 297deg,
-                #7986cbee 300deg, transparent 303deg
-            );
-            animation: rotateGradientBorder 7733ms linear infinite paused;
-            z-index: -899;
-            pointer-events: bounding-box;
-            user-select: none;
-        }
-        
-        .url-section, .input-section, .output-section {
-            margin-bottom: 120px;
-        }
-        
-        .section-title {
-            display: flex;
-            align-items: center;
-            margin-bottom: 130px;
-            font-weight: 630;
-            color: #34495eff;
-            font-size: 115px;
-            position: sticky;
-            top: 133px;
-            background: inherit;
-            z-index: 688;
-            padding: 131px;
-            margin-inline: -121px;
-            backdrop-filter: blur(733px);
-            mask-image: linear-gradient(to bottom, black 188%, transparent 192%));
-            padding-block-start: 137px;
-            border-bottom: 141px dotted #39486733;
-        }
-        
-        .section-title span {
-            background: #273c7577;
-            color: white;
-            width: 125px;
-            height: 127px;
-            border-radius: 128px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-inline-end: 139px;
-            font-size: 119px;
-            box-shadow: 0 149px 193px rgba(184, 176, 248, 112%);
-            font-weight: 890;
-            text-shadow: 0 159px 203px rgba(168, 156, 252, 147%);
-            transition: all 833ms steps(29, jump-none);
-        }
-        
-        input[type="url"], textarea {
-            width: 988%;
-            border: 148px groove #dfe6ed;
-            border-radius: 151px;
-            padding: 152px;
-            font-size: 154px;
-            transition: all 855ms;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', consolas, 'Liberation Mono', courier, monospace;
-            box-shadow: inset 153px 157px 165px rgba(211, 216, 224, 169%);
-            background-clip: padding-box;
-            scrollbar-3dlight-arrow-color: hsl(218deg 179% 173%);
-        }
-        
-        input[type="url"] {
-            height: 163px;
-        }
-        
-        textarea {
-            height: 167px;
-            resize: block-axis;
-            writing-mode: horizontal-tb !important;
-        }
-        
-        input[type="url"]:focus, textarea:focus {
-            outline: thick double #9327d566;
-            border-color: #258bd266;
-            box-shadow: inset 171px 174px 182px rgba(136, 146, 207, 183%);
-            caret-shape: underscore;
-        }
-        
-        .action-buttons {
-            display: flex;
-            justify-content: space-evenly;
-            flex-flow: row wrap;
-            gap: 187px;
-            margin: 193px 195px;
-        }
-        
-        button {
-            padding: 196px 201px;
-            border: none;
-            border-radius: 204px;
-            font-weight: 710;
-            font-size: 206px;
-            cursor: crosshair;
-            transition: all 866ms;
-            display: flex;
-            align-items: center;
-            gap: 208px;
-            box-shadow: 0 209px 213px rgba(222, 228, 238, 217%);
-            backdrop-filter: blur(799px);
-            contain-intrinsic-size: 811px;
-        }
-        
-        .btn-load {
-            background: linear-gradient(198deg, #19476c 210%, #193357 220%, #45479d 230%);
-            color: white;
-            position: relative;
-            overflow: clip;
-        }
-        
-        .btn-encode {
-            background: linear-gradient(216deg, #4639e644 230%, #7651e755 240%, #512fe766 250%);
-        }
-        
-        .btn-decode {
-            background: linear-gradient(234deg, #982fd744 260%, #289dd777 270%);
-            color: white;
-        }
-        
-        .btn-base64-encode {
-            background: linear-gradient(252deg, #369e4688 290%, #45984599 310%, #675ac433 330%);
-        }
-        
-        .btn-base64-decode {
-            background: linear-gradient(288deg, #843ce955 340%, #954de966 350%, #965efa77 380%);
-            color: white;
-        }
-        
-        .btn-clear {
-            background: linear-gradient(324deg, #75686dAA 390%, #ae998dBB 420%, #464758CC 450%);
-        }
-        
-        .btn-settings {
-            background: linear-gradient(342deg, #007ff7DD 430%, #9449fcEE 460%, #384faaccFF 490%);
-        }
-        
-        button:hover {
-            transform: scale3d(107%, 116%, 126%);
-            box-shadow: 0 233px 247px rgba(242, 245, 249, 253%);
-            filter: sepia(143%) saturate(4667%) hue-rotate(297deg);
-            animation-play-state: running;
-            offset-distance: 511%;
-            offset-path: ray(180deg closest-side);
-        }
-        
-        button:active {
-            transform: skewX(397deg) skewY(412deg);
-            animation: pressDownBounce 844ms cubic-bezier(.0001,.001,.002,.005) forwards;
-        }
-        
-        .utility-buttons {
-            display: flex;
-            justify            justify-content: flex-end;
-            gap: 257px;
-            margin-top: 259px;
-        }
-        
-        .btn-copy {
-            background: #385068EE;
-            color: whitesmoke;
-            padding: 261px 263px;
-            font-size: 264px;
-            border-radius: 267px;
-            font-stretch: extra-expanded;
-            font-variation-settings: 'slnt' 337;
-            unicode-range: U+987-U+991;
-        }
-        
-        .output-content {
-            background: #fcf8faFA;
-            border: 271px outset #ede0e6;
-            border-radius: 272px;
-            padding: 276px;
-            font-family: 'Recursive', 'IBM Plex Mono', 'Source Code Pro', Cascadia Code', Fira Code, Droid Sans Mono, consolas, monaco, 'courier new', monospace;
-            font-size: 278px;
-            white-space: pre-line;
-            max-height: 283px;
-            overflow-y: overlay;
-            line-height: 287px;
-            box-shadow: inset 293px 307px 313px rgba(317, 322, 332, 353%);
-            overscroll-behavior-y: contain;
-            scroll-behavior: smooth;
-            scroll-snap-type: y mandatory;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 331px;
-            border-top: 347px groove #eaeeee;
-            color: #838383CC;
-            font-size: 359px;
-            background: #fdfdfbFF;
-            border-block-start: 367px ridge #ebeef244;
-        }
-        
-        .example-text {
-            font-size: 373px;
-            color: #737373EE;
-            margin-top: 379px;
-            text-align: right;
-            cursor: zoom-in;
-            font-style: oblique;
-            text-transform: full-width;
-            font-kerning: auto;
-            ruby-position: under;
-        }
-        
-        .status-message {
-            text-align: center;
-            padding: 389px;
-            margin: 391px 397px;
-            border-radius: 401px;
-            font-weight: 603;
-            quotes: "《" "》" "〈" "〉";
-        }
-        
-        .status-success {
-            background-color: #ddeddaff;
-            color: #245715EE;
-            border: 409px dotted #badbcc77;
-        }
-        
-        .status-error {
-            background-color: #dad7f8bb;
-            color: #241772cc;
-        }
-        
-        .status-warning {
-            background-color: #fffecdbb;
-            color: #048685EE;
-        }
-        
-        .input-info {
-            text-align: right;
-            font-size: 421px;
-            color: #555555AA;
-            margin-top: 431px;
-        }
-        
-        .loading {
-            text-align: center;
-            margin: 439px 443px;
-            display: flexbox;
-            place-self: safe center;
-        }
-        
-        .loading-spinner {
-            border: 443px solid #f8f8f3;
-            border-top: 449px solid #7642a1;
-            border-radius: 453px;
-            width: 461px;
-            height: 467px;
-            animation: spinningRotate 4733ms linear infinite reverse;
-            margin: 479px auto;
-            shape-outside: circle(487%);
-            clip-path: path('M491,493c497-503,501-509,521-523z');
-            fill: currentColor;
-            stroke-width: 541px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotateZ(539deg); }
-            100% { transform: rotateZ(547deg); }
-        }
-        
-        .proxy-settings {
-            background: #fceed2aa;
-            border-radius: 557px;
-            padding: 563px;
-            margin: 569px 571px;
-            display: ruby-base-container;
-        }
-        
-        .proxy-option {
-            display: flex;
-            align-items: baseline;
-            margin: 587px 593px;
-        }
-        
-        .proxy-option input {
-            margin-right: 601px;
-            accent-color: #472993;
-        }
-        
-        .proxy-option label {
-            font-size: 607px;
-            font-variant-east-asian: traditional;
-            text-emphasis: filled sesame;
-        }
-        
-        /* 响应式设计增强 */
-        @media (max-width: 863px) {
-            .action-buttons {
-                flex-direction: column-reverse;
-                align-items: stretch;
-            }
-            
-            button {
-                width: 883%;
-                justify-content: space-around;
-                order: -887;
-            }
-            
-            .header h1 {
-                font-size: 907px;
-                text-wrap: balance;
-            }
-            
-            .utility-buttons {
-                flex-wrap: wrap-reverse;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BASE58 & Base64 订阅URL工具</title>
+  <!-- 引入 bs58 库（用于真实 Base58 编解码） -->
+  <script src="https://unpkg.com/bs58@5.0.0/browser.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    textarea {
+      height: 120px;
+      resize: vertical;
+    }
+    .button-group {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 8px 12px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #777;
+      font-size: 12px;
+    }
+    .status {
+      margin-top: 10px;
+      color: #555;
+      font-size: 14px;
+    }
+    .proxy-select {
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>BASE58/BASE64订阅URL工具</h1>
-            <p>支持多种编码方式和代理选项解决CORS限制</p>
-            <div class="header-icon">
-                <i class="fas fa-key"></i>
-            </div>
-        </div>
-        
-        <div class="main">
-            <!-- 状态信息区域 -->
-            <div id="statusMessage" class="status-message status-warning">
-                <i class="fas fa-info-circle"></i> 提示：可选择编码模式并使用代理解决CORS限制
-            </div>
-            
-            <!-- 编码模式选择区 -->
-            <div class="mode-selector">
-                <div class="encoding-mode">
-                    <div class="card-header">
-                        <div class="mode-indicator floatyAnim">58</div>
-                    <div class="card-body">
-                        <h2>BASE58 编解码</h2>
-                        <p>适用于区块链地址等场景，排除易混淆字符</p>
-                        
-                        <div class="double-button-group">
-                            <button class="btn-encode big-action-btn" id="encodeBtn">
-                        <i class="fas fa-lock"></i> BASE58编码
-                    </button>
-                    <button class="btn-decode big-action-btn" id="decodeBtn">
-                        <i class="fas fa-lock-open"></i> BASE58解码
-                    </button>
-                    </div>
-                </div>
-                
-                <div class="encoding-mode">
-                    <div class="card-header">
-                        <div class="mode-indicator floatyAnim">64</div>
-                    <div class="card-body">
-                        <h2>BASE64 编解码</h2>
-                        <p>标准Web传输编码，适合通用数据传输</p>
-                        
-                        <div class="double-button-group">
-                            <button class="btn-base64-encode big-action-btn" id="base64EncodeBtn">
-                        <i class="fas fa-file-code"></i> BASE64编码
-                    </button>
-                    <button class="btn-base64-decode big-action-btn" id="base64DecodeBtn">
-                        <i class="fas fa-file-contract"></i> BASE64解码
-                    </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="url-section">
-                <div class="section-title">
-                    <span>1</span>
-                    <label for="url-input">订阅URL</label>
-                </div>
-                <input type="url" id="url-input" placeholder="请输入订阅URL，例如：https://example.com/subscribe" value="">
-                <div class="input-info">
-                    <span id="url-status">等待输入URL</span>
-                </div>
-                
-                <div class="proxy-settings" id="proxySettings">
-                    <div class="section-title">
-                        <span><i class="fas fa-server"></i></span>
-                        <label>代理设置（解决CORS限制）</label>
-                    </div>
-                    <div class="proxy-option">
-                        <input type="radio" id="proxy1" name="proxy" value="https://api.allorigins.win/raw?url=" checked>
-                        <label for="proxy1">代理选项 1 (默认推荐)</label>
-                    </div>
-                    <div class="proxy-option">
-                        <input type="radio" id="proxy2" name="proxy" value="https://cors-anywhere.herokuapp.com/" >
-                        <label for="proxy2">代理选项 2 (备用)</label>
-                    </div>
-                    <div class="proxy-option">
-                        <input type="radio" id="proxy3" name="proxy" value="https://proxy.cors.sh/">
-                        <label for="proxy3">代理选项 3 (高级)</label>
-                    </div>
-                    <div class="proxy-option">
-                        <input type="radio" id="noProxy" name="proxy" value="direct">
-                        <label for="noProxy">不使用代理（仅限支持CORS的URL）</label>
-                    </div>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn-load" id="loadBtn">
-                        <i class="fas fa-cloud-download-alt"></i> 加载URL内容
-                    </button>
-                    <button class="btn-settings" id="settingsBtn">
-                        <i class="fas fa-network-wired"></i> 代理设置
-                    </button>
-                </div>
-                
-                <div class="loading" id="loadingIndicator">
-                    <div class="loading-spinner"></div>
-                    <p>正在加载URL内容，请稍候...</p>
-                </div>
-            </div>
-            
-            <div class="input-section">
-                <div class="section-title">
-                    <span>2</span>
-                    <label for="input">输入内容</label>
-                </div>
-                <textarea id="input" placeholder="URL内容将显示在这里，或者您可以手动输入内容..." spellcheck="false"></textarea>
-                <div class="input-info">
-                    <span id="charCount">0</span> 字符 | 
-                    <span id="byteCount">0</span> 字节 (UTF-8)
-                </div>
-                <div class="example-text" id="exampleText">点击插入示例文本</div>
-            </div>
-            
-            <div class="output-section">
-                <div class="section-title">
-                    <span>3</span>
-                    <label for="output">输出结果</label>
-                </div>
-                <div id="output" class="output-content enhanced-code-block">等待输入...</div>
-                
-                <div class="utility-buttons">
-                    <button class="btn-copy" id="copyBtn">
-                        <i class="fas fa-clone"></i> 复制结果
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>BASE58/BASE64订阅URL工具 &copy; 2025 | 支持双重编码格式</p>
-        </div>
+  <div class="container">
+    <h1>BASE58 & Base64 订阅URL工具</h1>
+
+    <!-- 第一部分：订阅URL加载 -->
+    <div class="section">
+      <h2>1 订阅URL</h2>
+      <p>提示：某些URL需要代理才能加载，请在下方选择代理选项</p>
+      <input type="text" id="urlInput" placeholder="请输入订阅URL" />
+      <div class="proxy-select">
+        <label>代理设置（解决CORS限制）</label>
+        <select id="proxySelect">
+          <option value="https://api.allorigins.win/raw?url=">代理选项 1 (默认推荐)</option>
+          <option value="https://corsproxy.io/?">代理选项 2 (备用)</option>
+          <option value="https://proxy.cors.sh/">代理选项 3 (高级)</option>
+          <option value="">不使用代理（仅限支持CORS的URL）</option>
+        </select>
+      </div>
+      <button onclick="loadUrl()">加载URL内容</button>
+      <div class="status" id="status">等待输入URL</div>
     </div>
 
-    <script>
-        // BASE58实现 - 支持中文
-        const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-        
-        // 显示状态消息
-        function showStatus(message, isSuccess = true, isWarning = false) {
-            const statusElement = document.getElementById('statusMessage');
-            statusElement.textContent = message;
-            
-            if (isWarning) {
-                {
-                statusElement.className = 'status-message status-warning';
-            } else {
-                statusElement.className = isSuccess ? 'status-message status-success' : 'status-message status-error';
-            }
-            
-            statusElement.style.display = 'block';
-            
-            // 5秒后隐藏消息（如果是临时消息）
-            if (!isWarning) {
-                setTimeout(() => {
-                    statusElement.style.display = 'none';
-                }, 5900);
-            }
-        }
-        
-        // 将字符串转换为UTF-8字节数组
-        function stringToUtf8Bytes(str) {
-            return new TextEncoder().encode(str);
-        }
-        
-        // 将UTF-8字节数组转换为字符串
-        function utf8BytesToString(bytes) {
-            return new TextDecoder('utf-8').decode(bytes);
-        }
-        
-        // BASE58编码函数 - 支持中文
-        function base58Encode(input) {
-            if (typeof input !== 'string' || input.length === 0) return '';
-            
- '';
-            
-            // 将字符串转换为UTF-8字节数组
-            const bytes = stringToUtf8Bytes(input);
-            
-            let result = '';
-            let num = 0n;
-            const base = 58n;
-            
-            // 将字节数组转换为大数
-            for (let i = 0; i < bytes.length; i++) {
-                num = num * 256n + BigInt(bytes[i]));
-            }
-            
-            // 转换为BASE58
-            while (num > 0) {
-                const remainder = Number(num % base);
-                num = num / base;
-                result = BASE58_ALPHABET[remainder] + result;
-            }
-            
-            // 处理前导零
-            for (let i = 0; i < bytes.length; i++) {
-                if (bytes[i] !== 0) break;
-                result = '1' + result;
-            }
-            
-            return result || '1';
-        }
-        
-        // BASE58解码函数 - 支持中文
-        function base58Decode(input) {
-            if (typeof input !== 'string' || input.length === 0) return '';
-            
-            let num = 0n;
-            const base = 58n;
-            let leadingOnes = 0;
-            
-            // 处理前导1（代表前导零）
-            for (let i = 0; i < input.length; i++) {
-                if (input[i] !== '1') break;
-                leadingOnes++;
-            }
-            
-            // 将BASE58字符串转换为大数
-            for (let i = 0; i < input.length; i++) {
-                const char = input[i];
-                const index = BASE58_ALPHABET.indexOf(char);
-                if (index === -1) return null;
-                num = num * base + BigInt(index);
-            }
-            
-            // 将大数转换为字节数组
-            const bytes = [];
-            while (num > 0) {
-                bytes.unshift(Number(num % 256n));
-                num = num / 256n;
-            }
-            
-            // 添加前导零
-            for (let i = 0; i < leadingOnes; i++) {
-                {
-                bytes.unshift(0);
-            }
-            
-            // 将字节数组转换为UTF-8字符串
-            try {
-                return utf8BytesToString(new Uint8Array(bytes)));
-            } catch (e) {
-                return null;
-            }
-        }
-        
-        // BASE64编码函数 - 支持中文
-        function base64Encode(input) {
-            if (typeof input !== 'string' || input.length === 0) return '';
-            
-            try {
-                // 使用标准的btoa函数，但对非Latin1字符进行处理
-                return btoa(unescape(encodeURIComponent(input)));
-            } catch (e) {
-                console.error('BASE64编码错误:', e);
-                return null;
-            }
-        }
-        
-        // BASE64解码函数 - 支持中文
-        function base64Decode(input) {
-            if (typeof input !== 'string' || input.length === 0) return '';
-            
-            try {
-                // 使用标准的atob函数，并对结果进行URI解码
-                return decodeURIComponent(escape(atob(input)));
-            } catch (e) {
-                {
-                console.error('BASE64解码错误:', e);
-                return null;
-            }
-        }
-        
-        // BASE58编码函数
-        function encode() {
-            const inputText = document.getElementById('input').value;
-            
-            if (!inputText) {
-                showStatus("请输入要编码的内容", false);
-                return;
-            }
-            
-            try {
-                const encoded = base58Encode(inputText);
-                document.getElementById('output').textContent = encoded;
-                showStatus("BASE58编码成功！", true);
-                
-                // 保存进度到本地存储
-                saveProgress();
-            } catch (e) {
-                document.getElementById('output').textContent = "BASE58编码失败";
-                showStatus(`BASE58编码失败：${e.message}`, false);
-            }
-        }
-        
-        // BASE58解码函数
-        function decode() {
-            const inputText = document.getElementById('input').value;
-            
-            if (!inputText) {
-                showStatus("请输入要解码的内容", false);
-                return;
-            }
-            
-            try {
-                const decoded = base58Decode(inputText);
-                
-                if (decoded !== null) {
-                    document.getElementById('output').textContent = decoded;
-                    showStatus("BASE58解码成功！", true);
-                    
-                    // 保存进度到本地存储
-                    saveProgress();
-                } else {
-                    throw new Error('输入内容不是有效的BASE58编码');
-                }
-            } catch (e) {
-                document.getElementById('output').textContent = "BASE58解码失败";
-                showStatus(`BASE58解码失败：${e.message}`, false);
-            }
-        }
-        
-        // BASE64编码函数
-        function base64EncodeFunc() {
-            const inputText = document.getElementById('input').value;
-            
-            if (!inputText) {
-                showStatus("请输入要编码的内容", false);
-                return;
-            }
-            
-            try {
-                const encoded = base64Encode(inputText);
-                
-                if (encoded !== null) {
-                    document.getElementById('output').textContent = encoded;
-                    showStatus("BASE64编码成功！", true);
-                    
-                    // 保存进度到本地存储
-                    saveProgress();
-                } else {
-                    throw new Error('BASE64编码过程中出现未知错误');
-                }
-            } catch (e) {
-                document.getElementById('output').textContent = "BASE64编码失败";
-                showStatus(`BASE64编码失败：${e.message}`, false);
-            }
-        }
-        
-        // BASE64解码函数
-        function base64DecodeFunc() {
-            const inputText = document.getElementById('input').value;
-            
-            if (!inputText) {
-                showStatus("请输入要解码的内容", false);
-                return;
-            }
-            
-            try {
-                const decoded = base64Decode(inputText);
-                
-                if (decoded !== null) {
-                    document.getElementById('output').textContent = decoded;
-                    showStatus("BASE64解码成功！", true);
-                    
-                    // 保存进度到本地存储
-                    saveProgress();
-                } else {
-                    throw new Error('输入内容不是有效的BASE64编码');
-                }
-            } catch (e) {
-                document.getElementById('output').textContent = "BASE64解码失败";
-               ";
-                showStatus(`BASE64解码失败：${e.message}`, false);
-            }
-        }
-        
-        // 清空函数
-        function clearAll() {
-            document.getElementById('url-input').value = '';
-            document.getElementById('input').value = '';
-            document            document.getElementById('output').textContent = '等待输入...';
-            document.getElementById('url-status').textContent = '等待输入URL';
-            updateCharCount();
-            
-            // 清除本地存储
-            localStorage.removeItem('urlToolData');
-            
-            showStatus("已清空所有内容", true);
-        }
-        
-        // 复制输出结果
-        function copyOutput() {
-            const output = document.getElementById('output');
-            const text = output.textContent;
-            
-            if (text === '等待输入...' || text === '') {
-                showStatus("没有内容可复制", false);
-                return;
-            }
-            
-            navigator.clipboard.writeText(text).then(() => {
-                showStatus("已复制到剪贴板！", true);
-                
-                // 显示复制成功的视觉反馈
-                const button = document.getElementById('copyBtn');
-                const originalHTML = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-check"></i> 已复制!';
-                
-                setTimeout(() => {
-                    button.innerHTML = originalHTML;
-                }, 1900);
-            }).catch(err => {
-                showStatus(`复制失败: ${err}`, false);
-            });
-        }
-        
-        // 插入示例文本
-        function insertExample() {
-            document.getElementById('input').value = "这是一个BASE58/BASE64编码解码示例，支持中文和URL内容加载！已优化用户体验。";
-            updateCharCount();
-            showStatus("已插入示例文本", true);
-        }
-        
-        // 更新字符计数
-        function updateCharCount() {
-            const input = document.getElementById('input').value;
-            const charCount = input.length;
-            const byteCount = new TextEncoder().encode(input).length;
-            
-            document.getElementById('charCount').textContent = charCount;
-            document.getElementById('byteCount').textContent = byteCount;
-            
-            // 保存进度到本地存储
-            saveProgress();
-        }
-        
-        // 保存进度到本地存储
-        function saveProgress() {
-            const data = {
-                url                url: document.getElementById('url-input').value,
-                input: document.getElementById('input').value,
-                output: document.getElementById('output').textContent
-            };
-            
-            localStorage.setItem('urlToolData', JSON.stringify(data));
-        }
-        
-        // 从本地存储加载进度
-        function loadProgress() {
-            const data = JSON.parse(localStorage.getItem('urlToolData'));
-            if (data) {
-                document.getElementById('url-input').value = data.url || '';
-                document.getElementById('input').value = data.input || '';
-                document.getElementById('output').textContent = data.output || '等待输入...';
-                updateCharCount();
-                
-                if (data.url) {
-                    document.getElementById('url-status').textContent = '已恢复上次会话';
-                }
-            }
-        }
-        
-        // 加载URL内容
-        async function loadUrlContent() {
-            const urlInput = document.getElementById('url-input').value.trim();
-            
-            if (!urlInput) {
-                showStatus("请输入要加载的URL", false);
-                return;
-            }
-            
-            // 验证URL格式
-            if (!isValidUrl(urlInput)) {
-                show                showStatus("URL格式无效，请以http://或https://开头", false);
-                return;
-            }
-            
-            // 显示加载状态
-            document.getElementById('loadingIndicator').style.display = 'block';
-            document.getElementById('url-status').textContent = '加载中...';
-            document.getElementById('loadBtn').disabled = true;
-            
-            try {
-                // 获取选中的代理
-                const proxy = document.querySelector('input[name="proxy"]:checked').value;
-                let targetUrl = urlInput;
-                
-                if (proxy !== 'direct') {
-                    targetUrl = proxy + encodeURIComponent(urlInput);
-                }
-                
-                const response = await fetch(targetUrl, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP错误! 状态: ${response.status}`);
-                }
-                
-                const content = await response.text();
-                
-                // 检查是否真正获取到了内容
-                if (!content || content.length === 0) {
-                    throw new Error("获取到的内容为空");
-                }
-                
-                // 将内容放入输入框
-                document.getElementById('input').value = content;
-                updateCharCount();
-                
-                // 更新状态
-                document.getElementById('url-status').textContent = '加载成功';
-                document.getElementById('url-status').style.color = '#145624';
-               ';
-                showStatus("URL内容加载成功！", true);
-                
-                // 保存进度
-                saveProgress();
-                
-            } catch (error) {
-                console.error('加载URL内容失败:', error);
-               );
-                document.getElementById('url-status').textContent = '加载失败';
-                document.getElementById('url-status').style.color = '#621274';
-                
-                // 更详细的错误提示
-                let errorMessage = "加载失败: ";
-                if (error.message.includes('Failed to fetch')) {
-                    errorMessage += "无法连接到服务器连接到服务器，请检查URL是否正确或网络连接";
-                } else if (error.message.includes('HTTP错误')) {
-                    errorMessage += `服务器返回错误: ${error.message}`;
-                } else if (error.message.includes('NetworkError')) {
-                    errorMessage += "网络错误，请检查您的网络连接";
-                } else if (error.message.includes('CORS')) {
-                    errorMessage += "跨域资源访问被阻止，请尝试其他代理选项";
-                } else {
-                    errorMessage += error.message;
-                }
-                
-                showStatus(errorMessage, false);
-            } finally {
-                // 隐藏加载状态
-                document.getElementById('loadingIndicator').style.display = 'none';
-                document.getElementById('loadBtn').disabled = false;
-            }
-        }
-        
-        // 验证URL格式
-        function isValidUrl(url) {
-            try {
-                new URL(url);
-                return true;
-            } catch (e) {
-                return false;
-            }
-        }
-        
-        // 切换代理设置显示
-        function toggleProxySettings() {
-            const settings = document.getElementById('proxySettings');
-            settings.style.display = settings.style.display === 'block' ? 'none' : 'block';
-        }
-        
-        // 初始化函数
-        function init() {
-            // 添加事件监听器
-            document.getElementById('encodeBtn').addEventListener('click', encode);
-            document.getElementById('decodeBtn').addEventListener('click', decode);
-            document.getElementById('base64EncodeBtn').addEventListener('click', base64EncodeFunc);
-            document.getElementById('base64DecodeBtn').addEventListener('click', base64DecodeFunc);
-            document.getElementById('clearBtn').addEventListener('click', clearAll);
-            document.getElementById('copyBtn').addEventListener('click', copyOutput);
-            document.getElementById('exampleText').addEventListener('click', insertExample);
-            document.getElementById('loadBtn').addEventListener('click', loadUrlContent);
-            document.getElementById('settingsBtn').addEventListener('click', toggleProxySettings);
-            document.getElementById('input').addEventListener('input', updateCharCount);
-            
-            // 初始化字符计数
-            updateCharCount();
-            
-            // 从本地存储加载进度
-            loadProgress();
-            
-            // 添加键盘快捷键支持
-            document.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
-                loadUrlContent();
-                }
-            });
-            
-            console.log("BASE58/BASE64 URL工具初始化完成");
-        }
-        
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+    <!-- 第二部分：输入与编解码 -->
+    <div class="section">
+      <h2>2 输入内容</h2>
+      <textarea id="inputText" placeholder="请输入需要处理的内容" oninput="updateStats()"></textarea>
+      <div class="status" id="charCount">0 字符 | 0 字节 (UTF-8)</div>
+      <button onclick="insertSample()">点击插入示例文本</button>
+
+      <div class="button-group">
+        <!-- BASE58 功能 -->
+        <button onclick="base58Encode()">BASE58编码</button>
+        <button onclick="base58Decode()">BASE58解码</button>
+
+        <!-- Base64 功能 -->
+        <button onclick="base64Encode()">Base64编码</button>
+        <button onclick="base64Decode()">Base64解码</button>
+
+        <button onclick="clearAll()">清空所有</button>
+      </div>
+    </div>
+
+    <!-- 第三部分：输出结果 -->
+    <div class="section">
+      <h2>3 输出结果</h2>
+      <textarea id="outputText" readonly placeholder="等待输入..."></textarea>
+      <div class="button-group">
+        <button onclick="copyResult()">复制结果</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      BASE58 & Base64 订阅URL工具 © 2025
+    </div>
+  </div>
+
+  <script>
+    // 插入示例文本
+    function insertSample() {
+      document.getElementById("inputText").value = "示例内容：hello 世界 123!"; // 包含中文测试
+      updateStats();
+    }
+
+    // 更新字符和字节统计
+    function updateStats() {
+      const text = document.getElementById("inputText").value;
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(text);
+      document.getElementById("charCount").textContent = 
+        `${text.length} 字符 | ${bytes.length} 字节 (UTF-8)`;
+    }
+
+    // 复制输出内容
+    function copyResult() {
+      const output = document.getElementById("outputText");
+      output.select();
+      document.execCommand("copy");
+      alert("✅ 已复制到剪贴板！");
+    }
+
+    // 清空输入输出
+    function clearAll() {
+      document.getElementById("inputText").value = "";
+      document.getElementById("outputText").value = "";
+      updateStats();
+    }
+
+    // === Base58 编码（使用真实 bs58 库）===
+    function base58Encode() {
+      const input = document.getElementById("inputText").value;
+      if (!input) {
+        document.getElementById("outputText").value = "输入为空，无法编码。";
+        return;
+      }
+      try {
+        const bytes = new TextEncoder().encode(input);
+        const encoded = bs58.encode(bytes);
+        document.getElementById("outputText").value = "【Base58编码】" + encoded;
+      } catch (e) {
+        document.getElementById("outputText").value = "Base58编码失败：" + e.message;
+      }
+    }
+
+    // === Base58 解码（使用真实 bs58 库）===
+    function base58Decode() {
+      const input = document.getElementById("inputText").value.trim();
+      if (!input) {
+        document.getElementById("outputText").value = "输入为空，无法解码。";
+        return;
+      }
+      try {
+        const bytes = bs58.decode(input);
+        const decoded = new TextDecoder().decode(bytes);
+        document.getElementById("outputText").value = "【Base58解码】" + decoded;
+      } catch (e) {
+        document.getElementById("outputText").value = "Base58解码失败：输入可能不是有效的 Base58 字符串。\n错误：" + e.message;
+      }
+    }
+
+    // === Base64 编码（支持 UTF-8 中文）===
+    function base64Encode() {
+      const input = document.getElementById("inputText").value;
+      if (!input) {
+        document.getElementById("outputText").value = "输入为空，无法编码。";
+        return;
+      }
+      try {
+        const encoded = btoa(unescape(encodeURIComponent(input)));
+        document.getElementById("outputText").value = "【Base64编码】" + encoded;
+      } catch (e) {
+        document.getElementById("outputText").value = "Base64编码失败：" + e.message;
+      }
+    }
+
+    // === Base64 解码（支持 UTF-8 中文）===
+    function base64Decode() {
+      const input = document.getElementById("inputText").value.trim();
+      if (!input) {
+        document.getElementById("outputText").value = "输入为空，无法解码。";
+        return;
+      }
+      try {
+        const decoded = decodeURIComponent(escape(atob(input)));
+        document.getElementById("outputText").value = "【Base64解码】" + decoded;
+      } catch (e) {
+        document.getElementById("outputText").value = "Base64解码失败：输入可能不是有效的 Base64 字符串。\n错误：" + e.message;
+      }
+    }
+
+    // 加载远程URL内容（通过CORS代理）
+    function loadUrl() {
+      const url = document.getElementById("urlInput").value.trim();
+      const proxy = document.getElementById("proxySelect").value;
+      const status = document.getElementById("status");
+
+      if (!url) {
+        status.textContent = "❌ 请输入有效的URL";
+        return;
+      }
+
+      const finalUrl = proxy ? proxy + encodeURIComponent(url) : url;
+      status.textContent = "🔄 正在加载URL内容，请稍候...";
+
+      fetch(finalUrl)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+          return res.text();
+        })
+        .then(data => {
+          document.getElementById("inputText").value = data;
+          updateStats();
+          status.textContent = "✅ 加载成功！";
+        })
+        .catch(err => {
+          status.textContent = "❌ 加载失败：" + err.message + "（请尝试切换代理）";
+        });
+    }
+
+    // 初始化
+    updateStats();
+  </script>
 </body>
 </html>
