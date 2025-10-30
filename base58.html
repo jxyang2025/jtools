@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BASE58 & Base64 订阅URL工具</title>
-  <!-- 引入 bs58 库（用于真实 Base58 编解码） -->
-  <script src="https://unpkg.com/bs58@5.0.0/browser.js"></script>
+  <title>BASE58订阅URL工具</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -112,7 +110,7 @@
         <button onclick="base58Encode()">BASE58编码</button>
         <button onclick="base58Decode()">BASE58解码</button>
 
-        <!-- Base64 功能 -->
+        <!-- 新增：Base64 功能 -->
         <button onclick="base64Encode()">Base64编码</button>
         <button onclick="base64Decode()">Base64解码</button>
 
@@ -135,69 +133,83 @@
   </div>
 
   <script>
-    // 插入示例文本
-    function insertSample() {
-      document.getElementById("inputText").value = "示例内容：hello 世界 123!"; // 包含中文测试
-      updateStats();
-    }
+    // === 手动实现 Base58 编解码（Bitcoin 风格）===
+    const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
-    // 更新字符和字节统计
-    function updateStats() {
-      const text = document.getElementById("inputText").value;
+    function base58Encode(input) {
+      if (typeof input !== 'string') throw new Error('输入必须是字符串');
+
       const encoder = new TextEncoder();
-      const bytes = encoder.encode(text);
-      document.getElementById("charCount").textContent = 
-        `${text.length} 字符 | ${bytes.length} 字节 (UTF-8)`;
-    }
+      const bytes = encoder.encode(input);
+      let digits = [0];
 
-    // 复制输出内容
-    function copyResult() {
-      const output = document.getElementById("outputText");
-      output.select();
-      document.execCommand("copy");
-      alert("✅ 已复制到剪贴板！");
-    }
-
-    // 清空输入输出
-    function clearAll() {
-      document.getElementById("inputText").value = "";
-      document.getElementById("outputText").value = "";
-      updateStats();
-    }
-
-    // === Base58 编码（使用真实 bs58 库）===
-    function base58Encode() {
-      const input = document.getElementById("inputText").value;
-      if (!input) {
-        document.getElementById("outputText").value = "输入为空，无法编码。";
-        return;
+      for (let i = 0; i < bytes.length; i++) {
+        let carry = bytes[i];
+        for (let j = 0; j < digits.length; j++) {
+          carry += digits[j] << 8;
+          digits[j] = carry % 58;
+          carry = carry / 58 | 0;
+        }
+        while (carry > 0) {
+          digits.push(carry % 58);
+          carry = carry / 58 | 0;
+        }
       }
-      try {
-        const bytes = new TextEncoder().encode(input);
-        const encoded = bs58.encode(bytes);
-        document.getElementById("outputText").value = "【Base58编码】" + encoded;
-      } catch (e) {
-        document.getElementById("outputText").value = "Base58编码失败：" + e.message;
+
+      // 添加前导 '1' 对应的字节
+      let zeros = 0;
+      for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
+        zeros++;
       }
+
+      let result = '';
+      for (let i = 0; i < zeros; i++) result += '1';
+      for (let i = digits.length - 1; i >= 0; i--) {
+        result += BASE58_ALPHABET[digits[i]];
+      }
+      return result;
     }
 
-    // === Base58 解码（使用真实 bs58 库）===
-    function base58Decode() {
-      const input = document.getElementById("inputText").value.trim();
-      if (!input) {
-        document.getElementById("outputText").value = "输入为空，无法解码。";
-        return;
+    function base58Decode(input) {
+      let result = [];
+      let zeros = 0;
+
+      // 统计前导 '1'
+      for (let i = 0; i < input.length; i++) {
+        if (input[i] !== '1') break;
+        zeros++;
       }
-      try {
-        const bytes = bs58.decode(input);
-        const decoded = new TextDecoder().decode(bytes);
-        document.getElementById("outputText").value = "【Base58解码】" + decoded;
-      } catch (e) {
-        document.getElementById("outputText").value = "Base58解码失败：输入可能不是有效的 Base58 字符串。\n错误：" + e.message;
+
+      // 转换每个字符
+      for (let i = zeros; i < input.length; i++) {
+        const value = BASE58_ALPHABET.indexOf(input[i]);
+        if (value < 0) throw new Error('无效的 Base58 字符: ' + input[i]);
+
+        for (let j = 0; j < result.length; j++) {
+          result[j] <<= 3;
+        }
+        let carry = value;
+        for (let j = 0; j < result.length; j++) {
+          carry += result[j];
+          result[j] = carry % 256;
+          carry = carry / 256 | 0;
+        }
+        while (carry > 0) {
+          result.push(carry % 256);
+          carry = carry / 256 | 0;
+        }
       }
+
+      // 补前导零
+      while (zeros-- > 0) {
+        result.unshift(0);
+      }
+
+      const decoder = new TextDecoder('utf-8', { fatal: false });
+      return decoder.decode(new Uint8Array(result));
     }
 
-    // === Base64 编码（支持 UTF-8 中文）===
+    // === Base64 编解码（支持 UTF-8）===
     function base64Encode() {
       const input = document.getElementById("inputText").value;
       if (!input) {
@@ -212,7 +224,6 @@
       }
     }
 
-    // === Base64 解码（支持 UTF-8 中文）===
     function base64Decode() {
       const input = document.getElementById("inputText").value.trim();
       if (!input) {
@@ -227,7 +238,62 @@
       }
     }
 
-    // 加载远程URL内容（通过CORS代理）
+    // === 前端调用函数 ===
+    function base58Encode() {
+      const input = document.getElementById("inputText").value;
+      if (!input) {
+        document.getElementById("outputText").value = "输入为空，无法编码。";
+        return;
+      }
+      try {
+        const encoded = base58Encode(input);
+        document.getElementById("outputText").value = "【Base58编码】" + encoded;
+      } catch (e) {
+        document.getElementById("outputText").value = "Base58编码失败：" + e.message;
+      }
+    }
+
+    function base58Decode() {
+      const input = document.getElementById("inputText").value.trim();
+      if (!input) {
+        document.getElementById("outputText").value = "输入为空，无法解码。";
+        return;
+      }
+      try {
+        const decoded = base58Decode(input);
+        document.getElementById("outputText").value = "【Base58解码】" + decoded;
+      } catch (e) {
+        document.getElementById("outputText").value = "Base58解码失败：" + e.message;
+      }
+    }
+
+    // === 其他功能 ===
+    function insertSample() {
+      document.getElementById("inputText").value = "示例内容：hello 世界 123!";
+      updateStats();
+    }
+
+    function updateStats() {
+      const text = document.getElementById("inputText").value;
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(text);
+      document.getElementById("charCount").textContent = 
+        `${text.length} 字符 | ${bytes.length} 字节 (UTF-8)`;
+    }
+
+    function copyResult() {
+      const output = document.getElementById("outputText");
+      output.select();
+      document.execCommand("copy");
+      alert("✅ 已复制到剪贴板！");
+    }
+
+    function clearAll() {
+      document.getElementById("inputText").value = "";
+      document.getElementById("outputText").value = "";
+      updateStats();
+    }
+
     function loadUrl() {
       const url = document.getElementById("urlInput").value.trim();
       const proxy = document.getElementById("proxySelect").value;
@@ -261,3 +327,5 @@
   </script>
 </body>
 </html>
+
+
